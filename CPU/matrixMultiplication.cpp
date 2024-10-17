@@ -1,4 +1,4 @@
-#include "matrixOperations.h"
+#include "matrixMultiplication.h"
 
 #include <iostream>
 #include <vector>
@@ -18,8 +18,9 @@ void multiplySingleColumn(std::vector<std::vector<int>>& result,
     result[aRow][bColumn] = sum;
 }
 
-namespace MatrixOps {
-    std::vector<std::vector<int>> multiply(const std::vector<std::vector<int>>& a, const std::vector<std::vector<int>>& b) {
+
+namespace Multiplication {
+    std::vector<std::vector<int>> naiveMultiThreads(const std::vector<std::vector<int>>& a, const std::vector<std::vector<int>>& b) {
         int rowsA = a.size();
         int columnsA = a[0].size();
         int rowsB = b.size();
@@ -48,7 +49,8 @@ namespace MatrixOps {
         return result;
     }
 
-    std::vector<std::vector<int>> multiplyOnSingleThread(const std::vector<std::vector<int>>& a, const std::vector<std::vector<int>>& b) {
+
+    std::vector<std::vector<int>> singleThread(const std::vector<std::vector<int>>& a, const std::vector<std::vector<int>>& b) {
         int rowsA = a.size();
         int columnsA = a[0].size();
         int rowsB = b.size();
