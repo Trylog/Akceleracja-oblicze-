@@ -12,5 +12,4 @@ include_directories(${CMAKE_SOURCE_DIR})
 add_executable(
         App
         main.cpp
-        matrixMultiplication.cpp
 )
