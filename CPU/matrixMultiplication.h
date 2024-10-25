@@ -103,7 +103,8 @@ namespace MatrixMultiplication {
     }
 
     template <typename T>
-std::vector<std::vector<T>> threadPooledMultiThreads(const std::vector<std::vector<T>>& a, const std::vector<std::vector<T>>& b) {
+    std::vector<std::vector<T>> threadPooledMultiThreads(const std::vector<std::vector<T>>& a,
+                                                     const std::vector<std::vector<T>>& b) {
         int rowsA = a.size();
         int rowsB = b.size();
         int columnsB = b[0].size();
@@ -179,7 +180,8 @@ std::vector<std::vector<T>> threadPooledMultiThreads(const std::vector<std::vect
     }
 
     template <typename T>
-std::vector<std::vector<T>> threadPooledMultiThreadsTransposed(const std::vector<std::vector<T>>& a, const std::vector<std::vector<T>>& b) {
+    std::vector<std::vector<T>> threadPooledMultiThreadsTransposed(const std::vector<std::vector<T>>& a,
+                                                                   const std::vector<std::vector<T>>& b) {
         int rowsA = a.size();
         int rowsB = b.size();
         int columnsB = b[0].size();
