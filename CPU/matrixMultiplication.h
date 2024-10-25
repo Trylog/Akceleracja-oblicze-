@@ -6,6 +6,7 @@
 // #include <windows.h>
 #include <mutex>
 #include<condition_variable>
+#include<queue>
 
 inline std::condition_variable cv;
 inline std::mutex cpuCountMutex;
@@ -83,33 +84,56 @@ std::vector<std::vector<T>> threadPooledMultiThreads(const std::vector<std::vect
         const unsigned int maxNumberOfCPUCores = std::thread::hardware_concurrency();
         std::cout << "Number of CPU cores: " << maxNumberOfCPUCores << std::endl;
 
-        int currentNumberOfCPUCoresInUse = 0;
+        // Task queue
+        std::queue<std::pair<int, int>> tasks;
         std::mutex mtx;
         std::condition_variable cv;
+        bool done = false;
 
-        std::vector<std::thread> threads;
-
+        // Populate tasks queue with all element positions to compute
         for (int i = 0; i < rowsA; ++i) {
             for (int j = 0; j < columnsB; ++j) {
-                std::unique_lock<std::mutex> lock(mtx);
-                cv.wait(lock, [&] { return currentNumberOfCPUCoresInUse < maxNumberOfCPUCores; });
-
-                currentNumberOfCPUCoresInUse++;
-                std::cout << "Current number of CPU cores in use: " << currentNumberOfCPUCoresInUse << std::endl;
-
-                threads.push_back(
-                    std::thread([&, i, j] {
-                        multiplySingleColumn<T>(resultMatrix, a, b, i, j, rowsB, currentNumberOfCPUCoresInUse);
-                        std::lock_guard<std::mutex> guard(mtx);
-                        currentNumberOfCPUCoresInUse--;
-                        cv.notify_one();
-                    })
-                );
+                tasks.emplace(i, j);
             }
         }
 
-        for (auto& t : threads) {
-            t.join();
+        // Function to be run by each thread, picking up tasks from the queue
+        auto worker = [&]() {
+            while (true) {
+                std::pair<int, int> task;
+                {
+                    std::unique_lock<std::mutex> lock(mtx);
+                    cv.wait(lock, [&]() { return done || !tasks.empty(); });
+
+                    if (done && tasks.empty()) return;
+
+                    task = tasks.front();
+                    tasks.pop();
+                }
+
+                int i = task.first;
+                int j = task.second;
+                multiplySingleColumn(resultMatrix, a, b, i, j, rowsB);
+            }
+        };
+
+        // Launch a fixed number of threads
+        std::vector<std::thread> threads;
+        for (unsigned int n = 0; n < maxNumberOfCPUCores; ++n) {
+            threads.emplace_back(worker);
+        }
+
+        // Notify all threads to start processing
+        cv.notify_all();
+
+        // Join all threads after work is done
+        {
+            std::unique_lock<std::mutex> lock(mtx);
+            done = true;
+        }
+        cv.notify_all();
+        for (auto& thread : threads) {
+            thread.join();
         }
 
         return resultMatrix;

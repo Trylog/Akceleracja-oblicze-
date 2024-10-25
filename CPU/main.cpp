@@ -59,8 +59,8 @@ void printRuntimes(int n, int m) {
     auto a = generateRandomMatrix<T>(n, m);
     auto b = generateRandomMatrix<T>(n, m);
 
-    double duration = measureExecutionTime(MatrixMultiplication::singleThread<T>, a, b);
-    std::cout << "Single-threaded Time: " << std::fixed << std::setprecision(2) << duration << " microseconds" << std::endl;
+    // double duration = measureExecutionTime(MatrixMultiplication::singleThread<T>, a, b);
+    // std::cout << "Single-threaded Time: " << std::fixed << std::setprecision(2) << duration << " microseconds" << std::endl;
 
     // double duration2 = measureExecutionTime(MatrixMultiplication::naiveMultiThreads<T>, a, b);
     // std::cout << "Naive multi-threaded Time: " << std::fixed << std::setprecision(2)
