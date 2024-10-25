@@ -69,6 +69,10 @@ void printRuntimes(int n, int m) {
     double duration3 = measureExecutionTime(MatrixMultiplication::threadPooledMultiThreads<T>, a, b);
     std::cout << "Thread-pooled multi-threaded Time: " << std::fixed << std::setprecision(2)
               << duration3 << " microseconds" << std::endl;
+
+    double duration4 = measureExecutionTime(MatrixMultiplication::threadPooledMultiThreadsTransposed<T>, a, b);
+    std::cout << "Thread-pooled multi-threaded Time (transposed): " << std::fixed << std::setprecision(2)
+              << duration4 << " microseconds" << std::endl;
 }
 
 
