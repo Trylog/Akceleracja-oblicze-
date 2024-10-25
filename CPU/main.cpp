@@ -88,6 +88,7 @@ void testOnRandomMatrix(char datatype, int N) {
             break;
         case '5':
             printRuntimes<float>(N, N);
+            break;
         case '6':
             printRuntimes<double>(N, N);
             break;
