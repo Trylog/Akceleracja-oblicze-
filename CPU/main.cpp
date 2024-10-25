@@ -6,22 +6,35 @@
 #include <functional>
 #include <limits>
 #include <variant>
+#include <random>
 
 #include "matrixMultiplication.h"
 
+
 template <typename T>
 std::vector<std::vector<T>> generateRandomMatrix(int n, int m) {
-    std::srand(static_cast<unsigned>(std::time(0)));
+    std::random_device rd;
+    std::mt19937 gen(rd());
     std::vector<std::vector<T>> matrix(n, std::vector<T>(m));
 
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < m; ++j) {
             if constexpr (std::is_integral_v<T>) {
-                // Generate a random integer number
-                matrix[i][j] = static_cast<T>(std::rand() % std::numeric_limits<T>::max());
+                if constexpr (std::is_signed_v<T>) {
+                    std::uniform_int_distribution<T> dist(std::numeric_limits<T>::min(), std::numeric_limits<T>::max());
+                    matrix[i][j] = dist(gen);
+                } else {
+                    std::uniform_int_distribution<T> dist(0, std::numeric_limits<T>::max());
+                    matrix[i][j] = dist(gen);
+                }
             } else if constexpr (std::is_floating_point_v<T>) {
-                // Generate a floating-point number normalized to the range [0, max]
-                matrix[i][j] = static_cast<T>(std::rand()) / static_cast<T>(RAND_MAX) * std::numeric_limits<T>::max();
+                if constexpr (std::is_signed_v<T>) {
+                    std::uniform_real_distribution<T> dist(-std::numeric_limits<T>::max(), std::numeric_limits<T>::max());
+                    matrix[i][j] = dist(gen);
+                } else {
+                    std::uniform_real_distribution<T> dist(0, std::numeric_limits<T>::max());
+                    matrix[i][j] = dist(gen);
+                }
             }
         }
     }
@@ -56,8 +69,7 @@ void printRuntimes(int n, int m) {
 }
 
 
-int main()
-{
+void testOnRandomMatrix() {
     std::string input;
     std::cout << "Type in size of matrices: ";
     std::cin >> input;
@@ -66,24 +78,41 @@ int main()
     char datatype;
     std::cout << "Choose datatype:\n";
     std::cout <<
-        "1. int\n" <<
-        "2. float\n" <<
-        "3. double\n";
+              "1. short\n" <<
+              "2. int\n" <<
+              "3. long\n" <<
+              "4. long long\n" <<
+              "5. float\n" <<
+              "6. double\n" <<
+              "7. long double";
+    std::cout << "Choice: ";
     std::cin >> datatype;
 
     switch (datatype) {
         case '1':
-            printRuntimes<int>(N, N);
+            printRuntimes<short>(N, N);
             break;
         case '2':
-            printRuntimes<float>(N, N);
+            printRuntimes<int>(N, N);
             break;
         case '3':
-            printRuntimes<double>(N, N);
+            printRuntimes<long>(N, N);
             break;
+        case '4':
+            printRuntimes<long long>(N, N);
+        case '5':
+            printRuntimes<float>(N, N);
+        case '6':
+            printRuntimes<double>(N, N);
+        case '7':
+            printRuntimes<long double>(N, N);
         default:
             std::cerr << "Invalid choice!" << std::endl;
     }
+}
 
+
+int main() {
+    testOnRandomMatrix();
     return 0;
 }
