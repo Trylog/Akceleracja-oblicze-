@@ -1,7 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <cstdlib>
-#include <ctime>
 #include <chrono>
 #include <functional>
 #include <limits>
@@ -69,25 +67,7 @@ void printRuntimes(int n, int m) {
 }
 
 
-void testOnRandomMatrix() {
-    std::string input;
-    std::cout << "Type in size of matrices: ";
-    std::cin >> input;
-    int N = std::stoi(input);
-
-    char datatype;
-    std::cout << "Choose datatype:\n";
-    std::cout <<
-              "1. short\n" <<
-              "2. int\n" <<
-              "3. long\n" <<
-              "4. long long\n" <<
-              "5. float\n" <<
-              "6. double\n" <<
-              "7. long double";
-    std::cout << "Choice: ";
-    std::cin >> datatype;
-
+void testOnRandomMatrix(char datatype, int N) {
     switch (datatype) {
         case '1':
             printRuntimes<short>(N, N);
@@ -112,7 +92,37 @@ void testOnRandomMatrix() {
 }
 
 
+int getDimensionOfMatrix() {
+    std::string input;
+    std::cout << "Type in size of matrices: ";
+    std::cin >> input;
+    int N = std::stoi(input);
+
+    return N;
+}
+
+
+char getDataType() {
+    char datatype;
+    std::cout << "Choose datatype:\n";
+    std::cout <<
+              "1. short\n" <<
+              "2. int\n" <<
+              "3. long\n" <<
+              "4. long long\n" <<
+              "5. float\n" <<
+              "6. double\n" <<
+              "7. long double\n";
+    std::cout << "Choice: ";
+    std::cin >> datatype;
+
+    return datatype;
+}
+
+
 int main() {
-    testOnRandomMatrix();
+    int N = getDimensionOfMatrix();
+    char datatype = getDataType();
+    testOnRandomMatrix(datatype, N);
     return 0;
 }
