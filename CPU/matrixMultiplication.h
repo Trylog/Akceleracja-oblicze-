@@ -15,28 +15,21 @@ inline std::mutex cpuCountMutex;
 template<typename T>
 void multiplySingleColumn(std::vector<std::vector<T> > &result,
                           const std::vector<std::vector<T> > &a, const std::vector<std::vector<T> > &b,
-                          int aRow, int bColumn, int numOfElements) {
+                          int aIndex, int bIndex, int numOfElements, bool wasTransposed = false) {
     T sum = T{}; // T{} is uniform initialization. Return 0 for numeric types
 
-    for (int k = 0; k < numOfElements; ++k) {
-        sum += a[aRow][k] * b[k][bColumn];
+    for (int i = 0; i < numOfElements; ++i) {
+        if (wasTransposed) {
+            sum += a[aIndex][i] * b[bIndex][i];
+        }
+        else{
+            sum += a[aIndex][i] * b[i][bIndex];
+        }
     }
 
-    result[aRow][bColumn] = sum;
+    result[aIndex][bIndex] = sum;
 }
 
-template<typename T>
-void multiplyTransposed(std::vector<std::vector<T> > &result,
-                        const std::vector<std::vector<T> > &a, const std::vector<std::vector<T> > &b,
-                        int aRow, int bRow, int numOfElements) {
-    T sum = T{}; // T{} is uniform initialization. Return 0 for numeric types
-
-    for (int k = 0; k < numOfElements; ++k) {
-        sum += a[aRow][k] * b[bRow][k];
-    }
-
-    result[aRow][bRow] = sum;
-}
 
 template<typename T>
 std::vector<std::vector<T>> transposeMatrix(const std::vector<std::vector<T>>& matrix) {
@@ -66,7 +59,7 @@ namespace MatrixMultiplication {
 
         for (int i = 0; i < rowsA; ++i) {
             for (int j = 0; j < columnsB; ++j) {
-                multiplySingleColumn<T>(resultMatrix, a, b, i, j, rowsB);
+                multiplySingleColumn<T>(resultMatrix, a, b, i, j, rowsB, false);
             }
         }
 
@@ -90,7 +83,7 @@ namespace MatrixMultiplication {
                 threads.push_back(
                     std::thread(multiplySingleColumn<T>, std::ref(resultMatrix),
                                 std::cref(a), std::cref(b),
-                                i, j, rowsB)
+                                i, j, rowsB, false)
                 );
             }
         }
@@ -101,6 +94,7 @@ namespace MatrixMultiplication {
 
         return resultMatrix;
     }
+
 
     template <typename T>
     std::vector<std::vector<T>> threadPooledMultiThreads(const std::vector<std::vector<T>>& a,
@@ -148,7 +142,7 @@ namespace MatrixMultiplication {
 
                 int i = task.first;
                 int j = task.second;
-                multiplySingleColumn(resultMatrix, a, b, i, j, rowsB);
+                multiplySingleColumn(resultMatrix, a, b, i, j, rowsB, false);
             }
         };
 
@@ -178,6 +172,7 @@ namespace MatrixMultiplication {
 
         return resultMatrix;
     }
+
 
     template <typename T>
     std::vector<std::vector<T>> threadPooledMultiThreadsTransposed(const std::vector<std::vector<T>>& a,
@@ -221,7 +216,7 @@ namespace MatrixMultiplication {
 
                 int i = task.first;
                 int j = task.second;
-                multiplyTransposed(resultMatrix, a, bTransposed, i, j, rowsB);
+                multiplySingleColumn(resultMatrix, a, bTransposed, i, j, rowsB, true);
             }
         };
 
@@ -246,5 +241,4 @@ namespace MatrixMultiplication {
 
         return resultMatrix;
     }
-
 }
