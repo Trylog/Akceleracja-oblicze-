@@ -3,6 +3,7 @@
 #include <matrixMultiplication.h>
 #include <vector>
 #include <thread>
+#include <iomanip>
 // #include <windows.h>
 #include <mutex>
 #include<condition_variable>
@@ -118,12 +119,17 @@ std::vector<std::vector<T>> threadPooledMultiThreads(const std::vector<std::vect
         std::condition_variable cv;
         bool done = false;
 
+        auto start = std::chrono::high_resolution_clock::now();
         // Populate tasks queue with all element positions to compute
         for (int i = 0; i < rowsA; ++i) {
             for (int j = 0; j < columnsB; ++j) {
                 tasks.emplace(i, j);
             }
         }
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::micro> duration = end - start;
+        std::cout << "Queueing time: " << std::fixed << std::setprecision(2) <<  duration.count() <<
+        " microseconds" << std::endl;
 
         // Function to be run by each thread, picking up tasks from the queue
         auto worker = [&]() {
@@ -154,6 +160,7 @@ std::vector<std::vector<T>> threadPooledMultiThreads(const std::vector<std::vect
         // Notify all threads to start processing
         cv.notify_all();
 
+        start = std::chrono::high_resolution_clock::now();
         // Join all threads after work is done
         {
             std::unique_lock<std::mutex> lock(mtx);
@@ -163,6 +170,10 @@ std::vector<std::vector<T>> threadPooledMultiThreads(const std::vector<std::vect
         for (auto& thread : threads) {
             thread.join();
         }
+
+        end = std::chrono::high_resolution_clock::now();
+        duration = end - start;
+        std::cout << "Joining: " << duration.count() << " microseconds" << std::endl;
 
         return resultMatrix;
     }
