@@ -60,10 +60,15 @@ void printRuntimes(int n, int m) {
     auto b = generateRandomMatrix<T>(n, m);
 
     double duration = measureExecutionTime(MatrixMultiplication::singleThread<T>, a, b);
-    std::cout << "Single-threaded Time: " << duration << " microseconds" << std::endl;
+    std::cout << "Single-threaded Time: " << std::fixed << std::setprecision(2) << duration << " microseconds" << std::endl;
 
-    double duration2 = measureExecutionTime(MatrixMultiplication::naiveMultiThreads<T>, a, b);
-    std::cout << "Naive multi-threaded Time: " << duration2 << " microseconds" << std::endl;
+    // double duration2 = measureExecutionTime(MatrixMultiplication::naiveMultiThreads<T>, a, b);
+    // std::cout << "Naive multi-threaded Time: " << std::fixed << std::setprecision(2)
+    //           << duration2 << " microseconds" << std::endl;
+
+    double duration3 = measureExecutionTime(MatrixMultiplication::threadPooledMultiThreads<T>, a, b);
+    std::cout << "Thread-pooled multi-threaded Time: " << std::fixed << std::setprecision(2)
+              << duration3 << " microseconds" << std::endl;
 }
 
 
@@ -80,12 +85,15 @@ void testOnRandomMatrix(char datatype, int N) {
             break;
         case '4':
             printRuntimes<long long>(N, N);
+            break;
         case '5':
             printRuntimes<float>(N, N);
         case '6':
             printRuntimes<double>(N, N);
+            break;
         case '7':
             printRuntimes<long double>(N, N);
+            break;
         default:
             std::cerr << "Invalid choice!" << std::endl;
     }
