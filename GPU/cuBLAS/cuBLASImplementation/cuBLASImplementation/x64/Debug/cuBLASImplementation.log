@@ -2,7 +2,9 @@
   
   C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\cuBLAS\cuBLASImplementation\cuBLASImplementation>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.39.33519\bin\HostX64\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\include"  -G   --keep-dir x64\Debug  -maxrregcount=0   --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc143.pdb" -o "C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\cuBLAS\cuBLASImplementation\cuBLASImplementation\x64\Debug\kernel.cu.obj" "C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\cuBLAS\cuBLASImplementation\cuBLASImplementation\kernel.cu" 
   kernel.cu
-  tmpxft_00004f90_00000000-7_kernel.cudafe1.cpp
-C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\cuBLAS\cuBLASImplementation\cuBLASImplementation\kernel.cu(88): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\cuBLAS\cuBLASImplementation\cuBLASImplementation\kernel.cu(92): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+  tmpxft_00001bcc_00000000-7_kernel.cudafe1.cpp
+C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\cuBLAS\cuBLASImplementation\cuBLASImplementation\kernel.cu(76): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\cuBLAS\cuBLASImplementation\cuBLASImplementation\kernel.cu(80): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+     Creating library C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\cuBLAS\cuBLASImplementation\x64\Debug\cuBLASImplementation.lib and object C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\cuBLAS\cuBLASImplementation\x64\Debug\cuBLASImplementation.exp
+LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   cuBLASImplementation.vcxproj -> C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\cuBLAS\cuBLASImplementation\x64\Debug\cuBLASImplementation.exe

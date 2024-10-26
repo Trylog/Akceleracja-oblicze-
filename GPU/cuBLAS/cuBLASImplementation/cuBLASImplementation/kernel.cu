@@ -19,6 +19,17 @@ void loadDimensions(int& m, int& n, int& k) {
 	cout << endl << "Matrix B dimensions: " << n << " X " << k << endl;
 }
 
+void printMatrix(float* M, int a, int b, string matrixName) {
+	//print read matrix
+	cout << endl << "Matrix " + matrixName + ": " << endl;
+	for (int i = 0; i < a; i++) {
+		for (int j = 0; j < b; j++) {
+			cout << M[i * b + j] << ", ";
+		}
+		cout << endl;
+	}
+}
+
 void randomizeMatrices(int m, int n, int k, float* A, float* B, float* C) {
 	//Generating matrices
 
@@ -29,7 +40,7 @@ void randomizeMatrices(int m, int n, int k, float* A, float* B, float* C) {
 
 	//2. Set generator options (seed, offset, order)
 	//arguments: (generator, seed)
-	curandSetPseudoRandomGeneratorSeed(generator, 1234UL);
+	curandSetPseudoRandomGeneratorSeed(generator, clock());
 
 	//3. Generate random numbers
 	curandGenerateUniform(generator, A, m * n);
@@ -55,31 +66,8 @@ void randomizeMatrices(int m, int n, int k, float* A, float* B, float* C) {
 	//4. Cleanup
 	curandDestroyGenerator(generator);
 
-
-	//Check matrices which were generated
-	float* generatedMatrixA = (float*)malloc(m * n * sizeof(float));
-	float* generatedMatrixB = (float*)malloc(n * k * sizeof(float));
-
-	cudaMemcpy(generatedMatrixA, A, m * n * sizeof(float), cudaMemcpyDeviceToHost);
-	cudaMemcpy(generatedMatrixB, B, n * k * sizeof(float), cudaMemcpyDeviceToHost);
-
-	//print read matrix
-	cout << endl << "Matrix A:" << endl;
-	for (int i = 0; i < m; i++) {
-		for (int j = 0; j < n; j++) {
-			cout << A[i * n + j] << ", ";
-		}
-		cout << endl;
-	}
-
-	//print read matrix
-	cout << endl << "Matrix B:" << endl;
-	for (int i = 0; i < n; i++) {
-		for (int j = 0; j < k; j++) {
-			cout << B[i * k + j] << ", ";
-		}
-		cout << endl;
-	}
+	printMatrix(A, m, n, "A");
+	printMatrix(B, n, k, "B");
 }
 
 void fixedMatrices(int m, int n, int k, float* A, float* B) {
@@ -92,27 +80,11 @@ void fixedMatrices(int m, int n, int k, float* A, float* B) {
 		B[i] = i;
 	}
 
-	//print read matrix
-	cout << endl << "Matrix A:" << endl;
-	for (int i = 0; i < m; i++) {
-		for (int j = 0; j < n; j++) {
-			cout << A[i * n + j] << ", ";
-		}
-		cout << endl;
-	}
-
-	//print read matrix
-	cout << endl << "Matrix B:" << endl;
-	for (int i = 0; i < n; i++) {
-		for (int j = 0; j < k; j++) {
-			cout << B[i * k + j] << ", ";
-		}
-		cout << endl;
-	}
+	printMatrix(A, m, n, "A");
+	printMatrix(B, n, k, "B");
 }
 
 int main() {
-
 	//matrix dimensions
 	int m, n;
 	int k;
@@ -169,7 +141,7 @@ int main() {
 
 	//CUBLAS_OP_N - non-transpose operation
 	//cublasSgemm(h,transpA,transpB,m,k,n,&alpha,&A,lda,&B,ldb,&beta,&C,ldc)
-	cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, k, n, &alpha, A, lda, B, ldb, &beta, C, ldc);
+	cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, k, n, &alpha, B, ldb, A, lda, &beta, C, ldc);
 
 	//retrieve matrix from gpu memory
 	//cublasGetMatrix(int rows, int cols, int elemSize, const void* A, int lda, void* B, int ldb)
@@ -185,13 +157,12 @@ int main() {
 
 	cout << endl << "It took: " << elapsedTime << " seconds" << endl;
 
-	//print score matrix
-	//row-major order
-	cout << "Score matrix:" << endl;
-	for (int i = 0; i < m; i++) {
-		for (int j = 0; j < k; j++) {
-			cout << D[i * k + j] << ", ";
-		}
-		cout << endl;
-	}
+	printMatrix(D, m, k, "score");
+
+	//free up memory
+	cudaFreeHost(A);
+	cudaFreeHost(B);
+	cudaFreeHost(C);
+	cudaFreeHost(D);
+	cublasDestroy(handle);
 }
