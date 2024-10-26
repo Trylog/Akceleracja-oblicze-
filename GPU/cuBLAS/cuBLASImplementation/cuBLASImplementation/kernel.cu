@@ -19,12 +19,13 @@ void loadDimensions(int& m, int& n, int& k) {
 	cout << endl << "Matrix B dimensions: " << n << " X " << k << endl;
 }
 
-void printMatrix(float* M, int a, int b, string matrixName) {
+void printMatrixColumnMajorOrder(float* M, int a, int b, string matrixName) {
 	//print read matrix
 	cout << endl << "Matrix " + matrixName + ": " << endl;
+
 	for (int i = 0; i < a; i++) {
 		for (int j = 0; j < b; j++) {
-			cout << M[i * b + j] << ", ";
+			cout << M[i + j * a] << ", ";
 		}
 		cout << endl;
 	}
@@ -66,22 +67,30 @@ void randomizeMatrices(int m, int n, int k, float* A, float* B, float* C) {
 	//4. Cleanup
 	curandDestroyGenerator(generator);
 
-	printMatrix(A, m, n, "A");
-	printMatrix(B, n, k, "B");
+	//input matrices are stored in column-major order
+	printMatrixColumnMajorOrder(A, m, n, "A");
+	printMatrixColumnMajorOrder(B, n, k, "B");
 }
 
 void fixedMatrices(int m, int n, int k, float* A, float* B) {
-	//row-major order
-	for (int i = 0; i < m * n; i++) {
-		A[i] = i;
+	//column-major order
+	int number = 0;
+	for (int i = 0; i < m; i++) {
+		for (int j = 0; j < n; j++) {
+			A[i + j * m] = number++;
+		}
 	}
 
-	for (int i = 0; i < n * k; i++) {
-		B[i] = i;
+	number = 0;
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < k; j++) {
+			B[i + j * n] = number++;
+		}
 	}
 
-	printMatrix(A, m, n, "A");
-	printMatrix(B, n, k, "B");
+	//input matrices are stored in column-major order
+	printMatrixColumnMajorOrder(A, m, n, "A");
+	printMatrixColumnMajorOrder(B, n, k, "B");
 }
 
 int main() {
@@ -141,7 +150,7 @@ int main() {
 
 	//CUBLAS_OP_N - non-transpose operation
 	//cublasSgemm(h,transpA,transpB,m,k,n,&alpha,&A,lda,&B,ldb,&beta,&C,ldc)
-	cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, k, n, &alpha, B, ldb, A, lda, &beta, C, ldc);
+	cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, k, n, &alpha, A, lda, B, ldb, &beta, C, ldc);
 
 	//retrieve matrix from gpu memory
 	//cublasGetMatrix(int rows, int cols, int elemSize, const void* A, int lda, void* B, int ldb)
@@ -157,7 +166,8 @@ int main() {
 
 	cout << endl << "It took: " << elapsedTime << " seconds" << endl;
 
-	printMatrix(D, m, k, "score");
+	//output matrix is stored in column-major order
+	printMatrixColumnMajorOrder(C, m, k, "score");
 
 	//free up memory
 	cudaFreeHost(A);
