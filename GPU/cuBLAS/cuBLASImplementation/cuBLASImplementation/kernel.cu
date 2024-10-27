@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <cublas_v2.h>
 #include <curand.h>
+#include <random>
 
 using namespace std;
 
@@ -19,7 +20,8 @@ void loadDimensions(int& m, int& n, int& k) {
 	cout << endl << "Matrix B dimensions: " << n << " X " << k << endl;
 }
 
-void printMatrixColumnMajorOrder(float* M, int a, int b, string matrixName) {
+template <typename T>
+void printMatrixColumnMajorOrder(T* M, int a, int b, string matrixName) {
 	//print read matrix
 	cout << endl << "Matrix " + matrixName + ": " << endl;
 
@@ -31,7 +33,8 @@ void printMatrixColumnMajorOrder(float* M, int a, int b, string matrixName) {
 	}
 }
 
-void randomizeMatrices(int m, int n, int k, float* A, float* B, float* C) {
+template <typename T>
+void randomizeMatrices(int m, int n, int k, T* A, T* B, T* C) {
 	//Generating matrices
 
 	//1. Init generator
@@ -44,25 +47,57 @@ void randomizeMatrices(int m, int n, int k, float* A, float* B, float* C) {
 	curandSetPseudoRandomGeneratorSeed(generator, clock());
 
 	//3. Generate random numbers
-	curandGenerateUniform(generator, A, m * n);
-	curandGenerateUniform(generator, B, n * k);
+
+	if constexpr (std::is_same<T, float>::value) {
+		curandGenerateUniform(generator, A, m * n);
+		curandGenerateUniform(generator, B, n * k);
+	}
+	else if constexpr (std::is_same<T, double>::value) {
+		curandGenerateUniformDouble(generator, A, m * n);
+		curandGenerateUniformDouble(generator, B, n * k);
+	}
+	else {
+		// If T is something else
+		std::cout << "Integer" << std::endl;
+	}
 
 	// Scaling range to [-10, 10]
-	float min = -10.0f;
-	float max = 10.0f;
-	float scale = max - min;
+	T min = -10;
+	T max = 10;
+	T scale = max - min;
 
 	// Scale each element in d_A and d_B
 	cublasHandle_t handle;
 	cublasCreate(&handle);
 
-	// First, multiply each element by `scale`
-	cublasSscal(handle, m * n, &scale, A, 1);
-	cublasSscal(handle, n * k, &scale, B, 1);
+	if constexpr (std::is_same<T, float>::value) {
+		// First, multiply each element by `scale`
+		cublasSscal(handle, m * n, &scale, A, 1);
+		cublasSscal(handle, n * k, &scale, B, 1);
 
-	// Then, add `min` to shift the values
-	cublasSaxpy(handle, m * n, &min, A, 1, A, 1);
-	cublasSaxpy(handle, n * k, &min, B, 1, B, 1);
+		// Then, add `min` to shift the values
+		cublasSaxpy(handle, m * n, &min, A, 1, A, 1);
+		cublasSaxpy(handle, n * k, &min, B, 1, B, 1);
+	}
+	else if constexpr (std::is_same<T, double>::value) {
+		// First, multiply each element by `scale`
+		cublasDscal(handle, m * n, &scale, A, 1);
+		cublasDscal(handle, n * k, &scale, B, 1);
+
+		// Then, add `min` to shift the values
+		cublasDaxpy(handle, m * n, &min, A, 1, A, 1);
+		cublasDaxpy(handle, n * k, &min, B, 1, B, 1);
+	}
+	else {
+		//For integers, there's no method to generate numbers in cublas library, so classicaly:
+		for (int i = 0; i < m * n; i++) {
+			A[i] = (rand() % (max - min + 1)) + min;
+		}
+
+		for (int i = 0; i < n * k; i++) {
+			B[i] = (rand() % (max - min + 1)) + min;
+		}
+	}
 
 	//4. Cleanup
 	curandDestroyGenerator(generator);
@@ -72,7 +107,8 @@ void randomizeMatrices(int m, int n, int k, float* A, float* B, float* C) {
 	printMatrixColumnMajorOrder(B, n, k, "B");
 }
 
-void fixedMatrices(int m, int n, int k, float* A, float* B) {
+template <typename T>
+void fixedMatrices(int m, int n, int k, T* A, T* B) {
 	//column-major order
 	int number = 0;
 	for (int i = 0; i < m; i++) {
@@ -93,7 +129,9 @@ void fixedMatrices(int m, int n, int k, float* A, float* B) {
 	printMatrixColumnMajorOrder(B, n, k, "B");
 }
 
-int main() {
+//generic
+template <typename T>
+void program() {
 	//matrix dimensions
 	int m, n;
 	int k;
@@ -102,18 +140,18 @@ int main() {
 
 	//Allocate memory
 	//two matrices
-	float* A, * B;
+	T* A, * B;
 
 	//score matrix in GPU memory
-	float* C;
+	T* C;
 
 	//score matrix in native memory
-	float* D;
+	T* D;
 
-	cudaMallocHost(&A, m * n * sizeof(float));
-	cudaMallocHost(&B, n * k * sizeof(float));
-	cudaMallocHost(&C, m * k * sizeof(float));
-	cudaMallocHost(&D, m * k * sizeof(float));
+	cudaMallocHost(&A, m * n * sizeof(T));
+	cudaMallocHost(&B, n * k * sizeof(T));
+	cudaMallocHost(&C, m * k * sizeof(T));
+	cudaMallocHost(&D, m * k * sizeof(T));
 
 	//random matrices or fixed matrices defined by user in code
 	int option;
@@ -122,18 +160,18 @@ int main() {
 	cin >> option;
 
 	if (option == 1) {
-		randomizeMatrices(m, n, k, A, B, C);
+		randomizeMatrices<T>(m, n, k, A, B, C);
 	}
 	else {
-		fixedMatrices(m, n, k, A, B);
+		fixedMatrices<T>(m, n, k, A, B);
 	}
 
 	//Multiplication operation
 	cublasHandle_t handle;
 	cublasCreate(&handle);
 
-	float alpha = 1.0f;
-	float beta = 0.0f;
+	T alpha = 1;
+	T beta = 0;
 
 	//find leading dimensions of matrices
 	int lda = m;
@@ -150,11 +188,20 @@ int main() {
 
 	//CUBLAS_OP_N - non-transpose operation
 	//cublasSgemm(h,transpA,transpB,m,k,n,&alpha,&A,lda,&B,ldb,&beta,&C,ldc)
-	cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, k, n, &alpha, A, lda, B, ldb, &beta, C, ldc);
+
+	if constexpr (std::is_same<T, float>::value) {
+		cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, k, n, &alpha, A, lda, B, ldb, &beta, C, ldc);
+	}
+	else if constexpr (std::is_same<T, double>::value) {
+		cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, k, n, &alpha, A, lda, B, ldb, &beta, C, ldc);
+	}
+	else {
+		cublasGemmEx(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, k, n, &alpha, A, CUDA_R_8I, lda, B, CUDA_R_8I, ldb, &beta, C, CUDA_R_8I, ldc, CUDA_R_8I, CUBLAS_GEMM_DEFAULT);
+	}
 
 	//retrieve matrix from gpu memory
 	//cublasGetMatrix(int rows, int cols, int elemSize, const void* A, int lda, void* B, int ldb)
-	cublasGetMatrix(m, k, sizeof(float), C, ldc, D, ldc);
+	cublasGetMatrix(m, k, sizeof(T), C, ldc, D, ldc);
 
 	//stop event
 	cudaEventRecord(stop, 0);
@@ -167,7 +214,7 @@ int main() {
 	cout << endl << "It took: " << elapsedTime << " seconds" << endl;
 
 	//output matrix is stored in column-major order
-	printMatrixColumnMajorOrder(C, m, k, "score");
+	printMatrixColumnMajorOrder<T>(C, m, k, "score");
 
 	//free up memory
 	cudaFreeHost(A);
@@ -175,4 +222,19 @@ int main() {
 	cudaFreeHost(C);
 	cudaFreeHost(D);
 	cublasDestroy(handle);
+}
+
+int main() {
+	int dataType;
+	cout << "Choose data type: " << endl;
+	cout << "1. Float" << endl;
+	cout << "2. Integer" << endl;
+	cout << "3. Double" << endl;
+	cin >> dataType;
+
+	switch (dataType) {
+	case 1: program<float>(); break;
+	case 2: program<int>(); break;
+	case 3: program<double>(); break;
+	}
 }

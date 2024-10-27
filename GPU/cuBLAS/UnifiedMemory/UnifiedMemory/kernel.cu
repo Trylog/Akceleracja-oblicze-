@@ -1,121 +1,185 @@
-﻿
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
+﻿#include <iostream>
+#include <cublas_v2.h>
+#include <curand.h>
 
-#include <stdio.h>
+using namespace std;
 
-cudaError_t addWithCuda(int *c, const int *a, const int *b, unsigned int size);
+void loadDimensions(int& m, int& n, int& k) {
+	cout << "Give 1. matrix's row size" << endl;
+	cout << "m: ";
+	cin >> m;
+	cout << endl << "Give 1. matrix's column size and 2. matrix's row size" << endl;
+	cout << "n: ";
+	cin >> n;
+	cout << endl << "Matrix A dimensions: " << m << " X " << n << endl;
 
-__global__ void addKernel(int *c, const int *a, const int *b)
-{
-    int i = threadIdx.x;
-    c[i] = a[i] + b[i];
+	cout << endl << "Give 2. matrix's column size" << endl;
+	cout << "k: ";
+	cin >> k;
+	cout << endl << "Matrix B dimensions: " << n << " X " << k << endl;
 }
 
-int main()
-{
-    const int arraySize = 5;
-    const int a[arraySize] = { 1, 2, 3, 4, 5 };
-    const int b[arraySize] = { 10, 20, 30, 40, 50 };
-    int c[arraySize] = { 0 };
+void printMatrixColumnMajorOrder(float* M, int a, int b, string matrixName) {
+	//print read matrix
+	cout << endl << "Matrix " + matrixName + ": " << endl;
 
-    // Add vectors in parallel.
-    cudaError_t cudaStatus = addWithCuda(c, a, b, arraySize);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "addWithCuda failed!");
-        return 1;
-    }
-
-    printf("{1,2,3,4,5} + {10,20,30,40,50} = {%d,%d,%d,%d,%d}\n",
-        c[0], c[1], c[2], c[3], c[4]);
-
-    // cudaDeviceReset must be called before exiting in order for profiling and
-    // tracing tools such as Nsight and Visual Profiler to show complete traces.
-    cudaStatus = cudaDeviceReset();
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaDeviceReset failed!");
-        return 1;
-    }
-
-    return 0;
+	for (int i = 0; i < a; i++) {
+		for (int j = 0; j < b; j++) {
+			cout << M[i + j * a] << ", ";
+		}
+		cout << endl;
+	}
 }
 
-// Helper function for using CUDA to add vectors in parallel.
-cudaError_t addWithCuda(int *c, const int *a, const int *b, unsigned int size)
-{
-    int *dev_a = 0;
-    int *dev_b = 0;
-    int *dev_c = 0;
-    cudaError_t cudaStatus;
+void randomizeMatrices(int m, int n, int k, float* A, float* B, float* C) {
+	//Generating matrices
 
-    // Choose which GPU to run on, change this on a multi-GPU system.
-    cudaStatus = cudaSetDevice(0);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
-        goto Error;
-    }
+	//1. Init generator
+	//arguments: (pointer to generator, type of generator to create)
+	curandGenerator_t generator;
+	curandCreateGenerator(&generator, CURAND_RNG_PSEUDO_DEFAULT);
 
-    // Allocate GPU buffers for three vectors (two input, one output)    .
-    cudaStatus = cudaMalloc((void**)&dev_c, size * sizeof(int));
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
-    }
+	//2. Set generator options (seed, offset, order)
+	//arguments: (generator, seed)
+	curandSetPseudoRandomGeneratorSeed(generator, clock());
 
-    cudaStatus = cudaMalloc((void**)&dev_a, size * sizeof(int));
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
-    }
+	//3. Generate random numbers
+	curandGenerateUniform(generator, A, m * n);
+	curandGenerateUniform(generator, B, n * k);
 
-    cudaStatus = cudaMalloc((void**)&dev_b, size * sizeof(int));
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
-    }
+	// Scaling range to [-10, 10]
+	float min = -10.0f;
+	float max = 10.0f;
+	float scale = max - min;
 
-    // Copy input vectors from host memory to GPU buffers.
-    cudaStatus = cudaMemcpy(dev_a, a, size * sizeof(int), cudaMemcpyHostToDevice);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMemcpy failed!");
-        goto Error;
-    }
+	// Scale each element in d_A and d_B
+	cublasHandle_t handle;
+	cublasCreate(&handle);
 
-    cudaStatus = cudaMemcpy(dev_b, b, size * sizeof(int), cudaMemcpyHostToDevice);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMemcpy failed!");
-        goto Error;
-    }
+	// First, multiply each element by `scale`
+	cublasSscal(handle, m * n, &scale, A, 1);
+	cublasSscal(handle, n * k, &scale, B, 1);
 
-    // Launch a kernel on the GPU with one thread for each element.
-    addKernel<<<1, size>>>(dev_c, dev_a, dev_b);
+	// Then, add `min` to shift the values
+	cublasSaxpy(handle, m * n, &min, A, 1, A, 1);
+	cublasSaxpy(handle, n * k, &min, B, 1, B, 1);
 
-    // Check for any errors launching the kernel
-    cudaStatus = cudaGetLastError();
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "addKernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
-        goto Error;
-    }
-    
-    // cudaDeviceSynchronize waits for the kernel to finish, and returns
-    // any errors encountered during the launch.
-    cudaStatus = cudaDeviceSynchronize();
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching addKernel!\n", cudaStatus);
-        goto Error;
-    }
+	//4. Cleanup
+	curandDestroyGenerator(generator);
 
-    // Copy output vector from GPU buffer to host memory.
-    cudaStatus = cudaMemcpy(c, dev_c, size * sizeof(int), cudaMemcpyDeviceToHost);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMemcpy failed!");
-        goto Error;
-    }
+	//input matrices are stored in column-major order
+	printMatrixColumnMajorOrder(A, m, n, "A");
+	printMatrixColumnMajorOrder(B, n, k, "B");
+}
 
-Error:
-    cudaFree(dev_c);
-    cudaFree(dev_a);
-    cudaFree(dev_b);
-    
-    return cudaStatus;
+void fixedMatrices(int m, int n, int k, float* A, float* B) {
+	//column-major order
+	int number = 0;
+	for (int i = 0; i < m; i++) {
+		for (int j = 0; j < n; j++) {
+			A[i + j * m] = number++;
+		}
+	}
+
+	number = 0;
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < k; j++) {
+			B[i + j * n] = number++;
+		}
+	}
+
+	//input matrices are stored in column-major order
+	printMatrixColumnMajorOrder(A, m, n, "A");
+	printMatrixColumnMajorOrder(B, n, k, "B");
+}
+
+int main() {
+	//matrix dimensions
+	int m, n;
+	int k;
+
+	loadDimensions(m, n, k);
+
+	//Allocate memory
+	//two matrices
+	float* A, * B;
+
+	//score matrix in GPU memory
+	float* C;
+
+	//score matrix in native memory
+	float* D;
+
+	//automatically decided if opereations should be performed on CPU or GPU
+	cudaMallocManaged(&A, m * n * sizeof(float));
+	cudaMallocManaged(&B, n * k * sizeof(float));
+	cudaMallocManaged(&C, m * k * sizeof(float));
+	cudaMallocManaged(&D, m * k * sizeof(float));
+
+	//random matrices or fixed matrices defined by user in code
+	int option;
+	cout << endl << "1. Random matrices" << endl;
+	cout << "2. Own matrices defined in code" << endl;
+	cin >> option;
+
+	if (option == 1) {
+		randomizeMatrices(m, n, k, A, B, C);
+	}
+	else {
+		fixedMatrices(m, n, k, A, B);
+	}
+
+	//Multiplication operation
+	cublasHandle_t handle;
+	cublasCreate(&handle);
+
+	float alpha = 1.0f;
+	float beta = 0.0f;
+
+	//find leading dimensions of matrices
+	int lda = m;
+	int ldb = n;
+	int ldc = m;
+
+	//measure time
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+
+	//start event
+	cudaEventRecord(start, 0);
+
+	//CUBLAS_OP_N - non-transpose operation
+	//cublasSgemm(h,transpA,transpB,m,k,n,&alpha,&A,lda,&B,ldb,&beta,&C,ldc)
+	cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, k, n, &alpha, A, lda, B, ldb, &beta, C, ldc);
+
+	//retrieve matrix from gpu memory
+	//cublasGetMatrix(int rows, int cols, int elemSize, const void* A, int lda, void* B, int ldb)
+	cublasGetMatrix(m, k, sizeof(float), C, ldc, D, ldc);
+
+	//stop event
+	cudaEventRecord(stop, 0);
+	cudaEventSynchronize(stop);
+	float elapsedTime;
+	cudaEventElapsedTime(&elapsedTime, start, stop);
+	cudaEventDestroy(start);
+	cudaEventDestroy(stop);
+
+	//make sure everything has finished, prevent races
+	cudaDeviceSynchronize();
+
+	//start prefetching data to device, since kernel has finished
+	cudaMemPrefetchAsync(C, m * k, cudaCpuDeviceId);
+
+	cout << endl << "It took: " << elapsedTime << " seconds" << endl;
+
+	//output matrix is stored in column-major order
+	printMatrixColumnMajorOrder(C, m, k, "score");
+
+	//free up memory
+	cudaFreeHost(A);
+	cudaFreeHost(B);
+	cudaFreeHost(C);
+	cudaFreeHost(D);
+	cublasDestroy(handle);
 }
