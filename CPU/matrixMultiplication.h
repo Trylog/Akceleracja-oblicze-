@@ -46,11 +46,11 @@ std::vector<std::vector<T>> transposeMatrix(const std::vector<std::vector<T>>& m
 
 
 template<typename T>
-void worker(std::vector<std::vector<T>>& resultMatrix,
-            const std::vector<std::vector<T> >& a, const std::vector<std::vector<T>>& b, int numOfElements,
-            std::queue<std::pair<int, int>>& tasks,
-            std::mutex& mtx, std::condition_variable& cv,
-            bool& done) {
+void threadPoolWithBatchingWorker(std::vector<std::vector<T>>& resultMatrix,
+                                  const std::vector<std::vector<T> >& a, const std::vector<std::vector<T>>& b, int numOfElements,
+                                  std::queue<std::pair<int, int>>& tasks,
+                                  std::mutex& mtx, std::condition_variable& cv,
+                                  bool& done) {
     while (true) {
         std::pair<int, int> task;
         {
@@ -133,9 +133,9 @@ namespace MatrixMultiplication {
 
 
     template <typename T>
-    std::vector<std::vector<T>> threadPooledMultiThreads(const std::vector<std::vector<T>>& a,
-                                                         const std::vector<std::vector<T>>& b,
-                                                         bool withTransposition) {
+    std::vector<std::vector<T>> threadPoolWithBatching(const std::vector<std::vector<T>>& a,
+                                                       const std::vector<std::vector<T>>& b,
+                                                       bool withTransposition) {
         int rowsA = a.size();
         int rowsB = b.size();
         int columnsB = b[0].size();
@@ -145,34 +145,28 @@ namespace MatrixMultiplication {
         const std::vector<std::vector<T>>& newB = withTransposition ? transposeMatrix(b) : b;
 
         const unsigned int maxNumberOfCPUCores = std::thread::hardware_concurrency();
-        std::cout << "Number of CPU cores: " << maxNumberOfCPUCores << std::endl;
 
-        // Task queue
         std::queue<std::pair<int, int>> tasks;
         std::mutex mtx;
         std::condition_variable cv;
         bool done = false;
 
-        // Populate tasks queue with all element positions to compute
         for (int i = 0; i < rowsA; ++i) {
             for (int j = 0; j < columnsB; ++j) {
                 tasks.emplace(i, j);
             }
         }
 
-        // Launch a fixed number of threads
         std::vector<std::thread> threads;
         for (unsigned int n = 0; n < maxNumberOfCPUCores; ++n) {
-            threads.emplace_back(worker<T>,
+            threads.emplace_back(threadPoolWithBatchingWorker<T>,
                                  std::ref(resultMatrix), std::cref(a), std::cref(b), numOfElements,
                                  std::ref(tasks), std::ref(mtx), std::ref(cv), std::ref(done)
             );
         }
 
-        // Notify all threads to start processing
         cv.notify_all();
 
-        // Join all threads after work is done
         {
             std::unique_lock<std::mutex> lock(mtx);
             done = true;

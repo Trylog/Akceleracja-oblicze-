@@ -73,7 +73,8 @@ void printRuntimes(int n, int m) {
     auto b = generateRandomMatrix<T>(n, m);
 
     // Now directly passing the function pointers without lambdas
-    printRuntime<T>(MatrixMultiplication::threadPooledMultiThreads<T>, a, b, true, "Thread pool with batching");
+    printRuntime<T>(MatrixMultiplication::threadPoolWithBatching<T>, a, b, true,
+                    "Thread pool with batching");
     printRuntime<T>(MatrixMultiplication::naiveMultiThreads<T>, a, b, true, "Naive multi-threading");
 }
 
