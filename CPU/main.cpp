@@ -68,38 +68,38 @@ void printRuntime(Func func,
 
 
 template <typename T>
-void printRuntimes(int n, int m) {
-    auto a = generateRandomMatrix<T>(n, m);
-    auto b = generateRandomMatrix<T>(n, m);
+void printRuntimes(int rowsA, int columnsA, int rowsB, int columnsB) {
+    auto a = generateRandomMatrix<T>(rowsA, columnsA);
+    auto b = generateRandomMatrix<T>(rowsB, columnsB);
 
-    // Now directly passing the function pointers without lambdas
-    printRuntime<T>(MatrixMultiplication::threadPoolWithBatching<T>, a, b, true,
+    printRuntime<T>(MatrixMultiplication::threadPoolWithBatchingAndQueue<T>, a, b, true,
+                    "Thread pool with batching and pre-initialized queue");
+    printRuntime<T>(MatrixMultiplication::threadPoolWithBathing<T>, a, b, true,
                     "Thread pool with batching");
-    printRuntime<T>(MatrixMultiplication::naiveMultiThreads<T>, a, b, true, "Naive multi-threading");
 }
 
-void testOnRandomMatrix(char datatype, int n, int m) {
+void testOnRandomMatrix(char datatype, int rowsA, int columnsA, int rowsB, int columnsB) {
     switch (datatype) {
         case '1':
-            printRuntimes<short>(n, m);
+            printRuntimes<short>(rowsA, columnsA, rowsB, columnsB);
             break;
         case '2':
-            printRuntimes<int>(n, m);
+            printRuntimes<int>(rowsA, columnsA, rowsB, columnsB);
             break;
         case '3':
-            printRuntimes<long>(n, m);
+            printRuntimes<long>(rowsA, columnsA, rowsB, columnsB);
             break;
         case '4':
-            printRuntimes<long long>(n, m);
+            printRuntimes<long long>(rowsA, columnsA, rowsB, columnsB);
             break;
         case '5':
-            printRuntimes<float>(n, m);
+            printRuntimes<float>(rowsA, columnsA, rowsB, columnsB);
             break;
         case '6':
-            printRuntimes<double>(n, m);
+            printRuntimes<double>(rowsA, columnsA, rowsB, columnsB);
             break;
         case '7':
-            printRuntimes<long double>(n, m);
+            printRuntimes<long double>(rowsA, columnsA, rowsB, columnsB);
             break;
         default:
             std::cerr << "Invalid choice!" << std::endl;
@@ -107,13 +107,13 @@ void testOnRandomMatrix(char datatype, int n, int m) {
 }
 
 
-int getDimensionOfMatrix() {
+int getDimensionOfMatrix(std::string message) {
     std::string input;
-    std::cout << "Type in size of matrices: ";
+    std::cout << message;
     std::cin >> input;
-    int N = std::stoi(input);
+    int size = std::stoi(input);
 
-    return N;
+    return size;
 }
 
 
@@ -136,8 +136,17 @@ char getDataType() {
 
 
 int main() {
-    int N = getDimensionOfMatrix();
+    int rowsA = getDimensionOfMatrix("Type in rowsA size: ");
+    int columnsA = getDimensionOfMatrix("Type in columnsA size: ");
+    int rowsB = getDimensionOfMatrix("Type in rowsB size: ");
+    int columnsB = getDimensionOfMatrix("Type in columnsB size: ");
+
+    if (columnsA != rowsB) {
+        std::cerr << "Matrix1 columns number not equal to Matrix2 rows number." << std::endl;
+        return 0;
+    }
+
     char datatype = getDataType();
-    testOnRandomMatrix(datatype, N, N);
+    testOnRandomMatrix(datatype, rowsA, columnsA, rowsB, columnsB);
     return 0;
 }

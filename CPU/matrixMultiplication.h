@@ -46,11 +46,11 @@ std::vector<std::vector<T>> transposeMatrix(const std::vector<std::vector<T>>& m
 
 
 template<typename T>
-void threadPoolWithBatchingWorker(std::vector<std::vector<T>>& resultMatrix,
-                                  const std::vector<std::vector<T> >& a, const std::vector<std::vector<T>>& b, int numOfElements,
-                                  std::queue<std::pair<int, int>>& tasks,
-                                  std::mutex& mtx, std::condition_variable& cv,
-                                  bool& done) {
+void threadPoolWithBatchingAndQueueWorker(std::vector<std::vector<T>>& resultMatrix,
+                                          const std::vector<std::vector<T> >& a, const std::vector<std::vector<T>>& b, int numOfElements,
+                                          std::queue<std::pair<int, int>>& tasks,
+                                          std::mutex& mtx, std::condition_variable& cv,
+                                          bool& done) {
     while (true) {
         std::pair<int, int> task;
         {
@@ -68,6 +68,39 @@ void threadPoolWithBatchingWorker(std::vector<std::vector<T>>& resultMatrix,
         multiplySingleColumn(resultMatrix, a, b,
                              i, j, numOfElements,
                              true);
+    }
+}
+
+
+template <typename T>
+void threadPoolWithBatchingWorker(std::vector<std::vector<T>>& resultMatrix,
+                                  const std::vector<std::vector<T>>& a,
+                                  const std::vector<std::vector<T>>& b,
+                                  bool withTransposition,
+                                  int numOfElements, int aMaxSize, int bMaxSize,
+                                  int& aIndex, int& bIndex, std::mutex& mtx) {
+    int localAIndex, localBIndex;
+    while (true) {
+        {
+            std::lock_guard lock(mtx);
+
+            if (bIndex == bMaxSize - 1) {
+                bIndex = 0;
+                aIndex++;
+            } else {
+                bIndex++;
+            }
+
+            if (aIndex >= aMaxSize) {
+                return;
+            }
+
+            localAIndex = aIndex;
+            localBIndex = bIndex;
+        }
+
+        multiplySingleColumn(resultMatrix, a, b,
+                             localAIndex, localBIndex, numOfElements, withTransposition);
     }
 }
 
@@ -133,9 +166,9 @@ namespace MatrixMultiplication {
 
 
     template <typename T>
-    std::vector<std::vector<T>> threadPoolWithBatching(const std::vector<std::vector<T>>& a,
-                                                       const std::vector<std::vector<T>>& b,
-                                                       bool withTransposition) {
+    std::vector<std::vector<T>> threadPoolWithBatchingAndQueue(const std::vector<std::vector<T>>& a,
+                                                               const std::vector<std::vector<T>>& b,
+                                                               bool withTransposition) {
         int rowsA = a.size();
         int rowsB = b.size();
         int columnsB = b[0].size();
@@ -159,7 +192,7 @@ namespace MatrixMultiplication {
 
         std::vector<std::thread> threads;
         for (unsigned int n = 0; n < maxNumberOfCPUCores; ++n) {
-            threads.emplace_back(threadPoolWithBatchingWorker<T>,
+            threads.emplace_back(threadPoolWithBatchingAndQueueWorker<T>,
                                  std::ref(resultMatrix), std::cref(a), std::cref(b), numOfElements,
                                  std::ref(tasks), std::ref(mtx), std::ref(cv), std::ref(done)
             );
@@ -172,6 +205,40 @@ namespace MatrixMultiplication {
             done = true;
         }
         cv.notify_all();
+        for (auto& thread : threads) {
+            thread.join();
+        }
+
+        return resultMatrix;
+    }
+
+
+    template<typename T>
+    std::vector<std::vector<T>> threadPoolWithBathing(const std::vector<std::vector<T>>& a,
+                                                      const std::vector<std::vector<T>>& b,
+                                                      bool withTransposition) {
+        int rowsA = a.size();
+        int columnsB = b[0].size();
+        int numOfElements = b.size();
+
+        std::vector<std::vector<T>> resultMatrix(rowsA, std::vector<T>(columnsB, 0));
+        // Optionally transpose matrix b if needed
+        const std::vector<std::vector<T>>& newB = withTransposition ? transposeMatrix(b) : b;
+
+        const unsigned int maxNumberOfCPUCores = std::thread::hardware_concurrency();
+        int aIndex = 0;
+        int bIndex = -1;
+        std::mutex mtx;
+
+        std::vector<std::thread> threads;
+        for (unsigned int n = 0; n < maxNumberOfCPUCores; ++n) {
+            threads.emplace_back(threadPoolWithBatchingWorker<T>,
+                                 std::ref(resultMatrix), std::cref(a), std::cref(newB), withTransposition,
+                                 numOfElements, rowsA, columnsB, std::ref(aIndex), std::ref(bIndex),
+                                 std::ref(mtx)
+            );
+        }
+
         for (auto& thread : threads) {
             thread.join();
         }
