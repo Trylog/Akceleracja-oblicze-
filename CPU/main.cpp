@@ -6,6 +6,7 @@
 #include <limits>
 #include <variant>
 #include <random>
+#include <cstdint>
 
 #include "matrixMultiplication.h"
 
