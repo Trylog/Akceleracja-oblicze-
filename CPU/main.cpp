@@ -55,50 +55,50 @@ double measureExecutionTime(Func&& func, Args&&... args) {
 }
 
 
+template <typename T, typename Func>
+void printRuntime(Func func,
+                  const std::vector<std::vector<T>>& a,
+                  const std::vector<std::vector<T>>& b,
+                  bool transpose,
+                  const std::string& description) {
+    double duration = measureExecutionTime(func, a, b, transpose);
+    std::cout << description << ", transpose=" << transpose << " "
+              << std::fixed << std::setprecision(2) << duration << " microseconds" << std::endl;
+}
+
+
 template <typename T>
 void printRuntimes(int n, int m) {
     auto a = generateRandomMatrix<T>(n, m);
     auto b = generateRandomMatrix<T>(n, m);
 
-    // double duration = measureExecutionTime(MatrixMultiplication::singleThread<T>, a, b);
-    // std::cout << "Single-threaded Time: " << std::fixed << std::setprecision(2) << duration << " microseconds" << std::endl;
-
-    // double duration2 = measureExecutionTime(MatrixMultiplication::naiveMultiThreads<T>, a, b);
-    // std::cout << "Naive multi-threaded Time: " << std::fixed << std::setprecision(2)
-    //           << duration2 << " microseconds" << std::endl;
-
-    double duration3 = measureExecutionTime(MatrixMultiplication::threadPooledMultiThreads<T>, a, b);
-    std::cout << "Thread-pooled multi-threaded Time: " << std::fixed << std::setprecision(2)
-              << duration3 << " microseconds" << std::endl;
-
-    double duration4 = measureExecutionTime(MatrixMultiplication::threadPooledMultiThreadsTransposed<T>, a, b);
-    std::cout << "Thread-pooled multi-threaded Time (transposed): " << std::fixed << std::setprecision(2)
-              << duration4 << " microseconds" << std::endl;
+    // Now directly passing the function pointers without lambdas
+    printRuntime<T>(MatrixMultiplication::threadPooledMultiThreads<T>, a, b, true, "Thread pool with batching");
+    printRuntime<T>(MatrixMultiplication::naiveMultiThreads<T>, a, b, true, "Naive multi-threading");
 }
 
-
-void testOnRandomMatrix(char datatype, int N) {
+void testOnRandomMatrix(char datatype, int n, int m) {
     switch (datatype) {
         case '1':
-            printRuntimes<short>(N, N);
+            printRuntimes<short>(n, m);
             break;
         case '2':
-            printRuntimes<int>(N, N);
+            printRuntimes<int>(n, m);
             break;
         case '3':
-            printRuntimes<long>(N, N);
+            printRuntimes<long>(n, m);
             break;
         case '4':
-            printRuntimes<long long>(N, N);
+            printRuntimes<long long>(n, m);
             break;
         case '5':
-            printRuntimes<float>(N, N);
+            printRuntimes<float>(n, m);
             break;
         case '6':
-            printRuntimes<double>(N, N);
+            printRuntimes<double>(n, m);
             break;
         case '7':
-            printRuntimes<long double>(N, N);
+            printRuntimes<long double>(n, m);
             break;
         default:
             std::cerr << "Invalid choice!" << std::endl;
@@ -137,6 +137,6 @@ char getDataType() {
 int main() {
     int N = getDimensionOfMatrix();
     char datatype = getDataType();
-    testOnRandomMatrix(datatype, N);
+    testOnRandomMatrix(datatype, N, N);
     return 0;
 }
