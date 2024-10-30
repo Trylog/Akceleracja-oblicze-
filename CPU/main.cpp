@@ -6,7 +6,7 @@
 #include <limits>
 #include <variant>
 #include <random>
-#include <cstdint>
+#include <cstdint> // int8_t
 
 #include "matrixMultiplication.h"
 
@@ -56,27 +56,23 @@ double measureExecutionTime(Func&& func, Args&&... args) {
 }
 
 
-template <typename T, typename Func>
-void printRuntime(Func func,
-                  const std::vector<std::vector<T>>& a,
-                  const std::vector<std::vector<T>>& b,
-                  bool transpose,
-                  const std::string& description) {
-    double duration = measureExecutionTime(func, a, b, transpose);
-    std::cout << description << ", transpose=" << transpose << ": "
-              << std::fixed << std::setprecision(2) << duration << " microseconds" << std::endl;
-}
-
-
 template <typename T>
 void printRuntimes(int rowsA, int columnsA, int rowsB, int columnsB) {
     auto a = generateRandomMatrix<T>(rowsA, columnsA);
     auto b = generateRandomMatrix<T>(rowsB, columnsB);
+    double duration;
 
-    printRuntime<T>(MatrixMultiplication::threadPoolWithBatchingAndQueue<T>, a, b, true,
-                    "Thread pool with batching and pre-initialized queue");
-    printRuntime<T>(MatrixMultiplication::threadPoolWithBathing<T>, a, b, true,
-                    "Thread pool with batching");
+    ///*
+    duration = measureExecutionTime(MatrixMultiplication::AVX_singleThread<T>, a, b);
+    std::cout << "AVX2 single thread, transposition=true: " << std::fixed << std::setprecision(2) <<
+        duration << " microseconds" << std::endl;
+    //*/
+
+    ///*
+    duration = measureExecutionTime(MatrixMultiplication::threadPoolWithBatchingAndQueue<T>, a, b, true);
+    std::cout << "Thread pool with batching and queue, transposition=true: " << std::fixed << std::setprecision(2) <<
+        duration << " microseconds" << std::endl;
+    //*/
 }
 
 
@@ -86,25 +82,13 @@ void testOnRandomMatrix(char datatype, int rowsA, int columnsA, int rowsB, int c
             printRuntimes<int8_t>(rowsA, columnsA, rowsB, columnsB);
             break;
         case '2':
-            printRuntimes<short>(rowsA, columnsA, rowsB, columnsB);
-            break;
-        case '3':
             printRuntimes<int>(rowsA, columnsA, rowsB, columnsB);
             break;
-        case '4':
-            printRuntimes<long>(rowsA, columnsA, rowsB, columnsB);
-            break;
-        case '5':
-            printRuntimes<long long>(rowsA, columnsA, rowsB, columnsB);
-            break;
-        case '6':
+        case '3':
             printRuntimes<float>(rowsA, columnsA, rowsB, columnsB);
             break;
-        case '7':
+        case '4':
             printRuntimes<double>(rowsA, columnsA, rowsB, columnsB);
-            break;
-        case '8':
-            printRuntimes<long double>(rowsA, columnsA, rowsB, columnsB);
             break;
         default:
             std::cerr << "Invalid choice!" << std::endl;
@@ -127,13 +111,9 @@ char getDataType() {
     std::cout << "Choose datatype:\n";
     std::cout <<
               "1. int8_t: 8 bits\n" <<
-              "2. short: 16 bits\n" <<
-              "3. int: 32 bits\n" <<
-              "4. long: 32 or 64 bits (64 on 64-bit systems)\n" <<
-              "5. long long: 64 bits\n" <<
-              "6. float: 32 bits bits\n" <<
-              "7. double: 64 bits\n" <<
-              "8. long double: 80, 96, or 128 bits\n";
+              "2. int: 32 bits\n" <<
+              "3. float: 32 bits bits\n" <<
+              "4. double: 64 bits\n";
     std::cout << "Choice: ";
     std::cin >> datatype;
 
@@ -141,7 +121,7 @@ char getDataType() {
 }
 
 
-int main() {
+void runWithGeneratedMatrices() {
     int rowsA = getDimensionOfMatrix("Type in rowsA size: ");
     int columnsA = getDimensionOfMatrix("Type in columnsA size: ");
     int rowsB = getDimensionOfMatrix("Type in rowsB size: ");
@@ -149,10 +129,15 @@ int main() {
 
     if (columnsA != rowsB) {
         std::cerr << "Matrix1 columns number not equal to Matrix2 rows number." << std::endl;
-        return 0;
+        exit(3);
     }
 
     char datatype = getDataType();
     testOnRandomMatrix(datatype, rowsA, columnsA, rowsB, columnsB);
+}
+
+
+int main() {
+    runWithGeneratedMatrices();
     return 0;
 }
