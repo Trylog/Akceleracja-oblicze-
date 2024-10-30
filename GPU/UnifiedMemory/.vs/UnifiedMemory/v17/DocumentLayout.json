@@ -1,9 +1,9 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\Adam Czekalski\\Documents\\GitHub\\Akceleracja-obliczen-CUDA\\GPU\\cuBLAS\\UnifiedMemory\\",
+  "WorkspaceRootPath": "C:\\Users\\Adam Czekalski\\Documents\\GitHub\\Akceleracja-obliczen-CUDA\\GPU\\UnifiedMemory\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{954F1477-295F-478C-AD0B-3DFC346C47F5}|UnifiedMemory\\UnifiedMemory.vcxproj|C:\\Users\\Adam Czekalski\\Documents\\GitHub\\Akceleracja-obliczen-CUDA\\GPU\\cuBLAS\\UnifiedMemory\\UnifiedMemory\\kernel.cu||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "AbsoluteMoniker": "D:0:0:{954F1477-295F-478C-AD0B-3DFC346C47F5}|UnifiedMemory\\UnifiedMemory.vcxproj|C:\\Users\\Adam Czekalski\\Documents\\GitHub\\Akceleracja-obliczen-CUDA\\GPU\\UnifiedMemory\\UnifiedMemory\\kernel.cu||{8B382828-6202-11D1-8870-0000F87579D2}",
       "RelativeMoniker": "D:0:0:{954F1477-295F-478C-AD0B-3DFC346C47F5}|UnifiedMemory\\UnifiedMemory.vcxproj|solutionrelative:UnifiedMemory\\kernel.cu||{8B382828-6202-11D1-8870-0000F87579D2}"
     }
   ],
@@ -20,11 +20,11 @@
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "kernel.cu",
-              "DocumentMoniker": "C:\\Users\\Adam Czekalski\\Documents\\GitHub\\Akceleracja-obliczen-CUDA\\GPU\\cuBLAS\\UnifiedMemory\\UnifiedMemory\\kernel.cu",
+              "DocumentMoniker": "C:\\Users\\Adam Czekalski\\Documents\\GitHub\\Akceleracja-obliczen-CUDA\\GPU\\UnifiedMemory\\UnifiedMemory\\kernel.cu",
               "RelativeDocumentMoniker": "UnifiedMemory\\kernel.cu",
-              "ToolTip": "C:\\Users\\Adam Czekalski\\Documents\\GitHub\\Akceleracja-obliczen-CUDA\\GPU\\cuBLAS\\UnifiedMemory\\UnifiedMemory\\kernel.cu",
+              "ToolTip": "C:\\Users\\Adam Czekalski\\Documents\\GitHub\\Akceleracja-obliczen-CUDA\\GPU\\UnifiedMemory\\UnifiedMemory\\kernel.cu",
               "RelativeToolTip": "UnifiedMemory\\kernel.cu",
-              "ViewState": "AQIAAJAAAAAAAAAAAAAAAKgAAAAZAAAA",
+              "ViewState": "AQIAALIAAAAAAAAAAIAwwMQAAAABAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
               "WhenOpened": "2024-10-26T12:36:50.482Z",
               "EditorCaption": ""

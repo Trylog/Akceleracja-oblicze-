@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <cublas_v2.h>
 #include <curand.h>
+#include <random>
 
 using namespace std;
 
@@ -19,19 +20,26 @@ void loadDimensions(int& m, int& n, int& k) {
 	cout << endl << "Matrix B dimensions: " << n << " X " << k << endl;
 }
 
-void printMatrixColumnMajorOrder(float* M, int a, int b, string matrixName) {
+template <typename T>
+void printMatrixColumnMajorOrder(T* M, int a, int b, string matrixName) {
 	//print read matrix
 	cout << endl << "Matrix " + matrixName + ": " << endl;
 
 	for (int i = 0; i < a; i++) {
 		for (int j = 0; j < b; j++) {
-			cout << M[i + j * a] << ", ";
+			if (std::is_same<T, uint8_t>::value) {
+				cout << static_cast<int32_t>(M[i + j * a]) << ", ";
+			}
+			else {
+				cout << M[i + j * a] << ", ";
+			}
 		}
 		cout << endl;
 	}
 }
 
-void randomizeMatrices(int m, int n, int k, float* A, float* B, float* C) {
+template <typename T>
+void randomizeMatrices(int m, int n, int k, T* A, T* B) {
 	//Generating matrices
 
 	//1. Init generator
@@ -44,25 +52,56 @@ void randomizeMatrices(int m, int n, int k, float* A, float* B, float* C) {
 	curandSetPseudoRandomGeneratorSeed(generator, clock());
 
 	//3. Generate random numbers
-	curandGenerateUniform(generator, A, m * n);
-	curandGenerateUniform(generator, B, n * k);
+
+	if constexpr (std::is_same<T, float>::value) {
+		curandGenerateUniform(generator, A, m * n);
+		curandGenerateUniform(generator, B, n * k);
+	}
+	else if constexpr (std::is_same<T, double>::value) {
+		curandGenerateUniformDouble(generator, A, m * n);
+		curandGenerateUniformDouble(generator, B, n * k);
+	}
+	else {
+		srand(time(NULL));
+	}
 
 	// Scaling range to [-10, 10]
-	float min = -10.0f;
-	float max = 10.0f;
-	float scale = max - min;
+	T min = -10;
+	T max = 10;
+	T scale = max - min;
 
 	// Scale each element in d_A and d_B
 	cublasHandle_t handle;
 	cublasCreate(&handle);
 
-	// First, multiply each element by `scale`
-	cublasSscal(handle, m * n, &scale, A, 1);
-	cublasSscal(handle, n * k, &scale, B, 1);
+	if constexpr (std::is_same<T, float>::value) {
+		// First, multiply each element by `scale`
+		cublasSscal(handle, m * n, &scale, A, 1);
+		cublasSscal(handle, n * k, &scale, B, 1);
 
-	// Then, add `min` to shift the values
-	cublasSaxpy(handle, m * n, &min, A, 1, A, 1);
-	cublasSaxpy(handle, n * k, &min, B, 1, B, 1);
+		// Then, add `min` to shift the values
+		cublasSaxpy(handle, m * n, &min, A, 1, A, 1);
+		cublasSaxpy(handle, n * k, &min, B, 1, B, 1);
+	}
+	else if constexpr (std::is_same<T, double>::value) {
+		// First, multiply each element by `scale`
+		cublasDscal(handle, m * n, &scale, A, 1);
+		cublasDscal(handle, n * k, &scale, B, 1);
+
+		// Then, add `min` to shift the values
+		cublasDaxpy(handle, m * n, &min, A, 1, A, 1);
+		cublasDaxpy(handle, n * k, &min, B, 1, B, 1);
+	}
+	else {
+		//For integers, there's no method to generate numbers in cublas library, so classicaly:
+		for (int i = 0; i < m * n; i++) {
+			A[i] = static_cast<T>(rand() % (max - min + 1)) + min;
+		}
+
+		for (int i = 0; i < n * k; i++) {
+			B[i] = static_cast<T>(rand() % (max - min + 1)) + min;
+		}
+	}
 
 	//4. Cleanup
 	curandDestroyGenerator(generator);
@@ -72,7 +111,8 @@ void randomizeMatrices(int m, int n, int k, float* A, float* B, float* C) {
 	printMatrixColumnMajorOrder(B, n, k, "B");
 }
 
-void fixedMatrices(int m, int n, int k, float* A, float* B) {
+template <typename T>
+void fixedMatrices(int m, int n, int k, T* A, T* B) {
 	//column-major order
 	int number = 0;
 	for (int i = 0; i < m; i++) {
@@ -93,28 +133,16 @@ void fixedMatrices(int m, int n, int k, float* A, float* B) {
 	printMatrixColumnMajorOrder(B, n, k, "B");
 }
 
-int main() {
-	//matrix dimensions
-	int m, n;
-	int k;
-
-	loadDimensions(m, n, k);
-
-	//Allocate memory
-	//two matrices
-	float* A, * B;
-
-	//score matrix in GPU memory
-	float* C;
-
+template <typename T, typename U>
+void distinguish(int m, int n, int k, T* A, T* B) {
+	int id = cudaGetDevice(&id);
+	U* C;
 	//score matrix in native memory
-	float* D;
+	U* D;
 
-	//automatically decided if opereations should be performed on CPU or GPU
-	cudaMallocManaged(&A, m * n * sizeof(float));
-	cudaMallocManaged(&B, n * k * sizeof(float));
-	cudaMallocManaged(&C, m * k * sizeof(float));
-	cudaMallocManaged(&D, m * k * sizeof(float));
+	//automatically decide where structure should be now (host or device)
+	cudaMallocManaged(&C, m * k * sizeof(U));
+	cudaMallocManaged(&D, m * k * sizeof(U));
 
 	//random matrices or fixed matrices defined by user in code
 	int option;
@@ -123,18 +151,18 @@ int main() {
 	cin >> option;
 
 	if (option == 1) {
-		randomizeMatrices(m, n, k, A, B, C);
+		randomizeMatrices<T>(m, n, k, A, B);
 	}
 	else {
-		fixedMatrices(m, n, k, A, B);
+		fixedMatrices<T>(m, n, k, A, B);
 	}
 
 	//Multiplication operation
 	cublasHandle_t handle;
 	cublasCreate(&handle);
 
-	float alpha = 1.0f;
-	float beta = 0.0f;
+	T alpha = 1;
+	T beta = 0;
 
 	//find leading dimensions of matrices
 	int lda = m;
@@ -149,13 +177,31 @@ int main() {
 	//start event
 	cudaEventRecord(start, 0);
 
+	//start asynchronously (in-the-background) transfer data ahead of time
+	cudaMemPrefetchAsync(A, m * n * sizeof(T), id);
+	cudaMemPrefetchAsync(B, n * k * sizeof(T), id);
+
 	//CUBLAS_OP_N - non-transpose operation
 	//cublasSgemm(h,transpA,transpB,m,k,n,&alpha,&A,lda,&B,ldb,&beta,&C,ldc)
-	cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, k, n, &alpha, A, lda, B, ldb, &beta, C, ldc);
+
+	if constexpr (std::is_same<U, float>::value) {
+		cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, k, n, &alpha, A, lda, B, ldb, &beta, C, ldc);
+	}
+	else if constexpr (std::is_same<U, double>::value) {
+		cublasDgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, k, n, &alpha, A, lda, B, ldb, &beta, C, ldc);
+	}
+	else {
+		cublasGemmEx(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, k, n, &alpha, A, CUDA_R_8I, lda, B, CUDA_R_8I, ldb, &beta, C, CUDA_R_32I, ldc, CUBLAS_COMPUTE_32I, CUBLAS_GEMM_DEFAULT);
+	}
+
+	//wait for all operations to finish to use this data
+	cudaDeviceSynchronize();
+
+	cudaMemPrefetchAsync(C, m * k * sizeof(U), cudaCpuDeviceId);
 
 	//retrieve matrix from gpu memory
 	//cublasGetMatrix(int rows, int cols, int elemSize, const void* A, int lda, void* B, int ldb)
-	cublasGetMatrix(m, k, sizeof(float), C, ldc, D, ldc);
+	cublasGetMatrix(m, k, sizeof(U), C, ldc, D, ldc);
 
 	//stop event
 	cudaEventRecord(stop, 0);
@@ -165,16 +211,10 @@ int main() {
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
 
-	//make sure everything has finished, prevent races
-	cudaDeviceSynchronize();
-
-	//start prefetching data to device, since kernel has finished
-	cudaMemPrefetchAsync(C, m * k, cudaCpuDeviceId);
-
 	cout << endl << "It took: " << elapsedTime << " seconds" << endl;
 
 	//output matrix is stored in column-major order
-	printMatrixColumnMajorOrder(C, m, k, "score");
+	printMatrixColumnMajorOrder<U>(C, m, k, "score");
 
 	//free up memory
 	cudaFreeHost(A);
@@ -182,4 +222,45 @@ int main() {
 	cudaFreeHost(C);
 	cudaFreeHost(D);
 	cublasDestroy(handle);
+}
+
+//generic
+template <typename T>
+void program() {
+	//matrix dimensions
+	int m, n;
+	int k;
+
+	loadDimensions(m, n, k);
+
+	//Allocate memory
+	//two matrices
+	T* A, * B;
+
+	cudaMallocManaged(&A, m * n * sizeof(T));
+	cudaMallocManaged(&B, n * k * sizeof(T));
+
+	//score matrix in GPU memory
+	//for 8bit integers - score is 32 bits
+	if constexpr (std::is_same<T, int8_t>::value) {
+		distinguish<T, int32_t>(m, n, k, A, B);
+	}
+	else {
+		distinguish<T, T>(m, n, k, A, B);
+	}
+}
+
+int main() {
+	int dataType;
+	cout << "Choose data type: " << endl;
+	cout << "1. Float" << endl;
+	cout << "2. Integer" << endl;
+	cout << "3. Double" << endl;
+	cin >> dataType;
+
+	switch (dataType) {
+	case 1: program<float>(); break;
+	case 2: program<int8_t>(); break;
+	case 3: program<double>(); break;
+	}
 }
