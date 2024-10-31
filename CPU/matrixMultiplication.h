@@ -5,7 +5,6 @@
 
 #include <vector>
 
-// Multi-threading libraries
 #include <thread>
 #include <mutex>
 #include <queue>
@@ -16,7 +15,7 @@
 #include "algorithms/naiveMultiThreads.h"
 #include "algorithms/threadPoolWithBatching.h"
 #include "algorithms/threadPoolWithBatchingAndQueue.h"
-
+#include "algorithms/simd_threadPoolWithBatchingAndQueue.h"
 
 
 namespace MatrixMultiplication {
@@ -56,5 +55,12 @@ namespace MatrixMultiplication {
     std::vector<std::vector<T>> AVX_singleThread(const std::vector<std::vector<T>>& a,
                                                  const std::vector<std::vector<T>>& b) {
         return ::AVX_singleThread(a, b);
+    }
+
+
+    template <typename T>
+    std::vector<std::vector<T>> AVX_threadPoolWithBatchingAndQueue(const std::vector<std::vector<T>>& a,
+                                                                   const std::vector<std::vector<T>>& b) {
+        return ::AVX_threadPoolWithBatchingAndQueue(a, b);
     }
 }

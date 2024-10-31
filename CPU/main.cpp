@@ -63,6 +63,12 @@ void printRuntimes(int rowsA, int columnsA, int rowsB, int columnsB) {
     double duration;
 
     ///*
+    duration = measureExecutionTime(MatrixMultiplication::AVX_threadPoolWithBatchingAndQueue<T>, a, b);
+    std::cout << "AVX2 thread pool with batching and queue, transposition=true: " << std::fixed << std::setprecision(2) <<
+              duration << " microseconds" << std::endl;
+    //*/
+
+    ///*
     duration = measureExecutionTime(MatrixMultiplication::AVX_singleThread<T>, a, b);
     std::cout << "AVX2 single thread, transposition=true: " << std::fixed << std::setprecision(2) <<
         duration << " microseconds" << std::endl;

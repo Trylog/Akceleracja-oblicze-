@@ -11,14 +11,17 @@ std::vector<std::vector<float>> multiplyMatricesFloat(const std::vector<std::vec
     int rowsBT = bT.size();
     std::vector<std::vector<float>> result(rowsA, std::vector<float>(rowsBT, 0));
 
-    // Assuming b is transposed
+    __m256 sum_vec;
+    __m256 vec_a;
+    __m256 vec_b;
+
     for (int i = 0; i < rowsA; ++i) {
         for (int j = 0; j < rowsBT; ++j) {
-            __m256 sum_vec = _mm256_setzero_ps();
+            sum_vec = _mm256_setzero_ps();
 
             for (int k = 0; k < columnsA; k += 8) {
-                __m256 vec_a = _mm256_loadu_ps(&a[i][k]);
-                __m256 vec_b = _mm256_loadu_ps(&bT[j][k]);
+                vec_a = _mm256_loadu_ps(&a[i][k]);
+                vec_b = _mm256_loadu_ps(&bT[j][k]);
                 sum_vec = _mm256_fmadd_ps(vec_a, vec_b, sum_vec);
             }
 
@@ -40,13 +43,17 @@ std::vector<std::vector<double>> multiplyMatricesDouble(const std::vector<std::v
     int rowsBT = bT.size();
     std::vector<std::vector<double>> result(rowsA, std::vector<double>(rowsBT, 0));
 
+    __m256d sum_vec;
+    __m256d vec_a;
+    __m256d vec_b;
+
     for (int i = 0; i < rowsA; ++i) {
         for (int j = 0; j < rowsBT; ++j) {
-            __m256d sum_vec = _mm256_setzero_pd();
+            sum_vec = _mm256_setzero_pd();
 
             for (int k = 0; k < columnsA; k += 4) {
-                __m256d vec_a = _mm256_loadu_pd(&a[i][k]);
-                __m256d vec_b = _mm256_loadu_pd(&bT[j][k]);
+                vec_a = _mm256_loadu_pd(&a[i][k]);
+                vec_b = _mm256_loadu_pd(&bT[j][k]);
                 sum_vec = _mm256_fmadd_pd(vec_a, vec_b, sum_vec);
             }
 
@@ -67,13 +74,17 @@ std::vector<std::vector<int8_t>> multiplyMatricesInt8(const std::vector<std::vec
     int rowsBT = bT.size();
     std::vector<std::vector<int8_t>> result(rowsA, std::vector<int8_t>(rowsBT, 0));
 
+    __m256i sum_vec;
+    __m256i vec_a;
+    __m256i vec_b;
+
     for (int i = 0; i < rowsA; ++i) {
         for (int j = 0; j < rowsBT; ++j) {
-            __m256i sum_vec = _mm256_setzero_si256();
+            sum_vec = _mm256_setzero_si256();
 
             for (int k = 0; k < columnsA; k += 32) { // Load 32 bytes (32 int8_t)
-                __m256i vec_a = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&a[i][k]));
-                __m256i vec_b = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&bT[j][k]));
+                vec_a = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&a[i][k]));
+                vec_b = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&bT[j][k]));
                 sum_vec = _mm256_add_epi8(sum_vec, _mm256_maddubs_epi16(vec_a, vec_b));
             }
 
@@ -96,13 +107,17 @@ std::vector<std::vector<int>> multiplyMatricesInt(const std::vector<std::vector<
     int rowsBT = bT.size();
     std::vector<std::vector<int>> result(rowsA, std::vector<int>(rowsBT, 0));
 
+    __m256i sum_vec;
+    __m256i vec_a;
+    __m256i vec_b;
+
     for (int i = 0; i < rowsA; ++i) {
         for (int j = 0; j < rowsBT; ++j) {
-            __m256i sum_vec = _mm256_setzero_si256();
+            sum_vec = _mm256_setzero_si256();
 
             for (int k = 0; k < columnsA; k += 8) {
-                __m256i vec_a = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&a[i][k]));
-                __m256i vec_b = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&bT[j][k]));
+                vec_a = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&a[i][k]));
+                vec_b = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&bT[j][k]));
                 sum_vec = _mm256_add_epi32(sum_vec, _mm256_mullo_epi32(vec_a, vec_b));
             }
 
