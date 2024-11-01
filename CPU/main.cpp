@@ -17,25 +17,44 @@ std::vector<std::vector<T>> generateRandomMatrix(int n, int m) {
     std::mt19937 gen(rd());
     std::vector<std::vector<T>> matrix(n, std::vector<T>(m));
 
+    T maxValue = 100;
+    T minValue = -100;
+
+        // MAX AND MIN LIMITS:
+        auto maxIntSigned = std::numeric_limits<T>::max();
+        auto minIntSigned = std::numeric_limits<T>::min();
+
+        auto maxIntUnsigned = std::numeric_limits<T>::max();
+        int minIntUnsigned = 0;
+
+        auto maxFloatSigned = std::numeric_limits<T>::max();
+        auto minFloatSigned = -std::numeric_limits<T>::max();
+
+        auto maxFloatUnsigned = std::numeric_limits<T>::max();
+        auto minFloatUnsigned = 0;
+
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < m; ++j) {
             if constexpr (std::is_integral_v<T>) {
                 if constexpr (std::is_signed_v<T>) {
-                    std::uniform_int_distribution<T> dist(std::numeric_limits<T>::min(), std::numeric_limits<T>::max());
+                    std::uniform_int_distribution<T> dist(minValue, maxValue);
                     matrix[i][j] = dist(gen);
                 } else {
-                    std::uniform_int_distribution<T> dist(0, std::numeric_limits<T>::max());
-                    matrix[i][j] = dist(gen);
-                }
-            } else if constexpr (std::is_floating_point_v<T>) {
-                if constexpr (std::is_signed_v<T>) {
-                    std::uniform_real_distribution<T> dist(-std::numeric_limits<T>::max(), std::numeric_limits<T>::max());
-                    matrix[i][j] = dist(gen);
-                } else {
-                    std::uniform_real_distribution<T> dist(0, std::numeric_limits<T>::max());
+                    std::uniform_int_distribution<T> dist(0, maxValue * 2);
                     matrix[i][j] = dist(gen);
                 }
             }
+
+            else if constexpr (std::is_floating_point_v<T>) {
+                if constexpr (std::is_signed_v<T>) {
+                    std::uniform_real_distribution<T> dist(minValue, maxValue);
+                    matrix[i][j] = dist(gen);
+                } else {
+                    std::uniform_real_distribution<T> dist(0, maxValue * 2);
+                    matrix[i][j] = dist(gen);
+                }
+            }
+
         }
     }
 
@@ -71,14 +90,14 @@ void printRuntimes(int rowsA, int columnsA, int rowsB, int columnsB) {
     ///*
     duration = measureExecutionTime(MatrixMultiplication::AVX_singleThread<T>, a, b);
     std::cout << "AVX2 single thread, transposition=true: " << std::fixed << std::setprecision(2) <<
-        duration << " microseconds" << std::endl;
+              duration << " microseconds" << std::endl;
     //*/
 
-    ///*
+    /*
     duration = measureExecutionTime(MatrixMultiplication::threadPoolWithBatchingAndQueue<T>, a, b, true);
     std::cout << "Thread pool with batching and queue, transposition=true: " << std::fixed << std::setprecision(2) <<
         duration << " microseconds" << std::endl;
-    //*/
+    */
 }
 
 
