@@ -37,20 +37,20 @@ std::vector<std::vector<T>> generateRandomMatrix(int n, int m) {
         for (int j = 0; j < m; ++j) {
             if constexpr (std::is_integral_v<T>) {
                 if constexpr (std::is_signed_v<T>) {
-                    std::uniform_int_distribution<T> dist(minValue, maxValue);
+                    std::uniform_int_distribution<T> dist(minIntSigned, maxIntSigned);
                     matrix[i][j] = dist(gen);
                 } else {
-                    std::uniform_int_distribution<T> dist(0, maxValue * 2);
+                    std::uniform_int_distribution<T> dist(minIntUnsigned, maxIntUnsigned);
                     matrix[i][j] = dist(gen);
                 }
             }
 
             else if constexpr (std::is_floating_point_v<T>) {
                 if constexpr (std::is_signed_v<T>) {
-                    std::uniform_real_distribution<T> dist(minValue, maxValue);
+                    std::uniform_real_distribution<T> dist(minFloatSigned, maxFloatSigned);
                     matrix[i][j] = dist(gen);
                 } else {
-                    std::uniform_real_distribution<T> dist(0, maxValue * 2);
+                    std::uniform_real_distribution<T> dist(minFloatUnsigned, maxFloatUnsigned);
                     matrix[i][j] = dist(gen);
                 }
             }
