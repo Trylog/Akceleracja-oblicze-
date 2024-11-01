@@ -6,7 +6,7 @@
 #include <functional>
 
 #include "_helperFunctions.h"
-#include "_simdMultiplicationFuntions.h"
+#include "_simdMultiplicationFunctions.h"
 
 
 template <typename T>
