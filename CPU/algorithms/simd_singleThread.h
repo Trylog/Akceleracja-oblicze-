@@ -5,23 +5,24 @@
 #include <cstdint>
 #include <functional>
 
-#include "_helperFunctions.h"
-#include "_simdMultiplicationFunctions.h"
+#include "avxAlignedVector.h"
+#include "algorithms/_helperFunctions.h"
+#include "algorithms/_simdMultiplicationFunctions.h"
 
 
 template <typename T>
-std::vector<std::vector<T>> AVX_singleThread(const std::vector<std::vector<T>>& a,
-                                             const std::vector<std::vector<T>>& b) {
-    const std::vector<std::vector<T>>& bT = transposeMatrix(b); // Ensure this function is defined
+AvxAlignedMatrix<T> AVX_singleThread(const AvxAlignedMatrix<T> &a,
+                                     const AvxAlignedMatrix<T> &b) {
+    const AvxAlignedMatrix<T> &bT =  transposeMatrix(b);
     int rowsA = a.size();
     int columnsA = a[0].size();
     int rowsBT = bT.size();
 
-    std::vector<std::vector<T>> resultMatrix(rowsA, std::vector<T>(rowsBT, 0));
+    AvxAlignedMatrix<T> resultMatrix = createAvxAlignedMatrix<T>(rowsA, rowsBT);
 
-    std::function<void(const std::vector<std::vector<T>>&,
-                       const std::vector<std::vector<T>>&,
-                       std::vector<std::vector<T>>&,
+    std::function<void(const AvxAlignedMatrix<T>&,
+                       const AvxAlignedMatrix<T>&,
+                       AvxAlignedMatrix<T>&,
                        int, int, int, int)> multiplyFunc;
 
     if constexpr (std::is_same_v<T, float>) {

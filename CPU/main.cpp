@@ -9,13 +9,14 @@
 #include <cstdint> // int8_t
 
 #include "matrixMultiplication.h"
+#include "avxAlignedVector.h"
 
 
 template <typename T>
-std::vector<std::vector<T>> generateRandomMatrix(int n, int m) {
+AvxAlignedMatrix<T> generateRandomMatrix(int n, int m) {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::vector<std::vector<T>> matrix(n, std::vector<T>(m));
+    AvxAlignedMatrix<T> matrix = createAvxAlignedMatrix<T>(n, m);
 
     T maxValue = 100;
     T minValue = -100;
@@ -164,5 +165,6 @@ void runWithGeneratedMatrices() {
 
 int main() {
     runWithGeneratedMatrices();
+
     return 0;
 }

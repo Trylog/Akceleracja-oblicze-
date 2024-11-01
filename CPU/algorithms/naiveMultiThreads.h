@@ -3,19 +3,20 @@
 #include <vector>
 #include <thread>
 
-#include "_helperFunctions.h"
+#include "avxAlignedVector.h"
+#include "algorithms/_helperFunctions.h"
 
 template<typename T>
-std::vector<std::vector<T> > naiveMultiThreads(const std::vector<std::vector<T> > &a,
-                                               const std::vector<std::vector<T> > &b,
-                                               bool withTransposition) {
+AvxAlignedMatrix<T> naiveMultiThreads(const AvxAlignedMatrix<T> &a,
+                                      const AvxAlignedMatrix<T> &b,
+                                      bool withTransposition) {
     int rowsA = a.size();
     int rowsB = b.size();
     int columnsB = b[0].size();
     int numOfElements = rowsB;
 
-    std::vector<std::vector<T> > resultMatrix(rowsA, std::vector<T>(columnsB, 0));
-    const std::vector<std::vector<T>>& newB = withTransposition ? transposeMatrix(b) : b;
+    AvxAlignedMatrix<T> resultMatrix = createAvxAlignedMatrix<T>(rowsA, columnsB);
+    const AvxAlignedMatrix<T> &newB = withTransposition ? transposeMatrix(b) : b;
 
     std::vector<std::thread> threads;
 

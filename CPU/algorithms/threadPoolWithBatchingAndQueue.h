@@ -6,11 +6,15 @@
 #include <queue>
 #include <condition_variable>
 
+#include "avxAlignedVector.h"
 #include "algorithms/_helperFunctions.h"
 
+
 template<typename T>
-void threadPoolWithBatchingAndQueueWorker(std::vector<std::vector<T>>& resultMatrix,
-                                          const std::vector<std::vector<T> >& a, const std::vector<std::vector<T>>& b, int numOfElements,
+void threadPoolWithBatchingAndQueueWorker(AvxAlignedMatrix<T> &resultMatrix,
+                                          const AvxAlignedMatrix<T> &a,
+                                          const AvxAlignedMatrix<T> &b,
+                                          int numOfElements,
                                           std::queue<std::pair<int, int>>& tasks,
                                           std::mutex& mtx, std::condition_variable& cv,
                                           bool& done) {
@@ -36,16 +40,16 @@ void threadPoolWithBatchingAndQueueWorker(std::vector<std::vector<T>>& resultMat
 
 
 template <typename T>
-std::vector<std::vector<T>> threadPoolWithBatchingAndQueue(const std::vector<std::vector<T>>& a,
-                                                           const std::vector<std::vector<T>>& b,
-                                                           bool withTransposition) {
+AvxAlignedMatrix<T> threadPoolWithBatchingAndQueue(const AvxAlignedMatrix<T> &a,
+                                                   const AvxAlignedMatrix<T> &b,
+                                                   bool withTransposition) {
     int rowsA = a.size();
     int rowsB = b.size();
     int columnsB = b[0].size();
     int numOfElements = rowsB;
 
-    std::vector<std::vector<T>> resultMatrix(rowsA, std::vector<T>(columnsB, 0));
-    const std::vector<std::vector<T>>& newB = withTransposition ? transposeMatrix(b) : b;
+    AvxAlignedMatrix<T> resultMatrix = createAvxAlignedMatrix<T>(rowsA, columnsB);
+    const AvxAlignedMatrix<T> &newB = withTransposition ? transposeMatrix(b) : b;
 
     const unsigned int maxNumberOfCPUCores = std::thread::hardware_concurrency();
 

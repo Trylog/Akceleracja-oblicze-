@@ -1,12 +1,13 @@
 #pragma once
 
 #include <immintrin.h> // AVX
-#include <vector>
 #include <cstdint>
 
-void multiplySingleResultFloat(const std::vector<std::vector<float>>& a,
-                               const std::vector<std::vector<float>>& bT,
-                               std::vector<std::vector<float>>& resultMatrix,
+#include "avxAlignedVector.h"
+
+void multiplySingleResultFloat(const AvxAlignedMatrix<float> &a,
+                               const AvxAlignedMatrix<float> &bT,
+                               AvxAlignedMatrix<float> &resultMatrix,
                                int aIndex, int bIndex, int numOfElements, int numOfElementsThatFitSimd) {
     __m256 sum_vec = _mm256_setzero_ps();
     __m256 vec_a;
@@ -14,13 +15,13 @@ void multiplySingleResultFloat(const std::vector<std::vector<float>>& a,
 
     int i = 0;
     for (; i < numOfElementsThatFitSimd; i += 8) {
-        vec_a = _mm256_loadu_ps(&a[aIndex][i]);
-        vec_b = _mm256_loadu_ps(&bT[bIndex][i]);
+        vec_a = _mm256_load_ps(&a[aIndex][i]);
+        vec_b = _mm256_load_ps(&bT[bIndex][i]);
         sum_vec = _mm256_fmadd_ps(vec_a, vec_b, sum_vec);
     }
 
-    float sum_array[8] = {0};
-    _mm256_storeu_ps(sum_array, sum_vec);
+    alignas(32) float sum_array[8] = {0};
+    _mm256_store_ps(sum_array, sum_vec);
     float sum = 0;
     sum = sum_array[0] + sum_array[1] + sum_array[2] + sum_array[3] +
           sum_array[4] + sum_array[5] + sum_array[6] + sum_array[7];
@@ -33,9 +34,9 @@ void multiplySingleResultFloat(const std::vector<std::vector<float>>& a,
 }
 
 
-void multiplySingleResultDouble(const std::vector<std::vector<double>>& a,
-                                const std::vector<std::vector<double>>& bT,
-                                std::vector<std::vector<double>>& resultMatrix,
+void multiplySingleResultDouble(const AvxAlignedMatrix<double> &a,
+                                const AvxAlignedMatrix<double> &bT,
+                                AvxAlignedMatrix<double> &resultMatrix,
                                 int aIndex, int bIndex, int numOfElements, int numOfElementsThatFitSimd) {
     __m256d sum_vec = _mm256_setzero_pd();
     __m256d vec_a;
@@ -43,13 +44,13 @@ void multiplySingleResultDouble(const std::vector<std::vector<double>>& a,
 
     int i = 0;
     for (; i < numOfElementsThatFitSimd; i += 4) {
-        vec_a = _mm256_loadu_pd(&a[aIndex][i]);
-        vec_b = _mm256_loadu_pd(&bT[bIndex][i]);
+        vec_a = _mm256_load_pd(&a[aIndex][i]);
+        vec_b = _mm256_load_pd(&bT[bIndex][i]);
         sum_vec = _mm256_fmadd_pd(vec_a, vec_b, sum_vec);
     }
 
-    double sum_array[4] = {0};
-    _mm256_storeu_pd(sum_array, sum_vec);
+    alignas(32) double sum_array[4] = {0};
+    _mm256_store_pd(sum_array, sum_vec);
     double sum = sum_array[0] + sum_array[1] + sum_array[2] + sum_array[3];
 
     for (; i < numOfElements; ++i) {
@@ -60,9 +61,9 @@ void multiplySingleResultDouble(const std::vector<std::vector<double>>& a,
 }
 
 
-void multiplySingleResultInt8(const std::vector<std::vector<int8_t>>& a,
-                              const std::vector<std::vector<int8_t>>& bT,
-                              std::vector<std::vector<int8_t>>& resultMatrix,
+void multiplySingleResultInt8(const AvxAlignedMatrix<int8_t> &a,
+                              const AvxAlignedMatrix<int8_t> &bT,
+                              AvxAlignedMatrix<int8_t> &resultMatrix,
                               int aIndex, int bIndex, int numOfElements, int numOfElementsThatFitSimd) {
     __m256i sum_vec = _mm256_setzero_si256();
     __m256i vec_a;
@@ -70,13 +71,13 @@ void multiplySingleResultInt8(const std::vector<std::vector<int8_t>>& a,
 
     int i = 0;
     for (; i < numOfElementsThatFitSimd; i += 32) {
-        vec_a = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&a[aIndex][i]));
-        vec_b = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&bT[bIndex][i]));
+        vec_a = _mm256_load_si256(reinterpret_cast<const __m256i*>(&a[aIndex][i]));
+        vec_b = _mm256_load_si256(reinterpret_cast<const __m256i*>(&bT[bIndex][i]));
         sum_vec = _mm256_add_epi8(sum_vec, _mm256_maddubs_epi16(vec_a, vec_b));
     }
 
-    int8_t sum_array[32] = {0};
-    _mm256_storeu_si256(reinterpret_cast<__m256i*>(sum_array), sum_vec);
+    alignas(32) int8_t sum_array[32] = {0};
+    _mm256_store_si256(reinterpret_cast<__m256i*>(sum_array), sum_vec);
     int8_t sum = 0;
     for (int j = 0; j < 32; ++j) {
         sum += sum_array[j];
@@ -90,9 +91,9 @@ void multiplySingleResultInt8(const std::vector<std::vector<int8_t>>& a,
 }
 
 
-void multiplySingleResultInt(const std::vector<std::vector<int>>& a,
-                             const std::vector<std::vector<int>>& bT,
-                             std::vector<std::vector<int>>& resultMatrix,
+void multiplySingleResultInt(const AvxAlignedMatrix<int> &a,
+                             const AvxAlignedMatrix<int> &bT,
+                             AvxAlignedMatrix<int> &resultMatrix,
                              int aIndex, int bIndex, int numOfElements, int numOfElementsThatFitSimd) {
     __m256i sum_vec = _mm256_setzero_si256();
     __m256i vec_a;
@@ -100,13 +101,13 @@ void multiplySingleResultInt(const std::vector<std::vector<int>>& a,
 
     int i = 0;
     for (; i < numOfElementsThatFitSimd; i += 8) {
-        vec_a = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&a[aIndex][i]));
-        vec_b = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&bT[bIndex][i]));
+        vec_a = _mm256_load_si256(reinterpret_cast<const __m256i*>(&a[aIndex][i]));
+        vec_b = _mm256_load_si256(reinterpret_cast<const __m256i*>(&bT[bIndex][i]));
         sum_vec = _mm256_add_epi32(sum_vec, _mm256_mullo_epi32(vec_a, vec_b));
     }
 
-    int sum_array[8] = {0}; // 8 int max
-    _mm256_storeu_si256(reinterpret_cast<__m256i*>(sum_array), sum_vec);
+    alignas(32) int sum_array[8] = {0}; // 8 int max
+    _mm256_store_si256(reinterpret_cast<__m256i*>(sum_array), sum_vec);
     int sum = 0;
     for (int j = 0; j < 8; ++j) {
         sum += sum_array[j];

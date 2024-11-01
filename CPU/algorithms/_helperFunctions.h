@@ -1,10 +1,12 @@
 #pragma once
 #include <vector>
 
+#include "avxAlignedVector.h"
+
 
 template<typename T>
-void multiplySingleColumn(std::vector<std::vector<T> > &result,
-                          const std::vector<std::vector<T> > &a, const std::vector<std::vector<T> > &b,
+void multiplySingleColumn(AvxAlignedMatrix<T> &result,
+                          const AvxAlignedMatrix<T> &a, const AvxAlignedMatrix<T> &b,
                           int aIndex, int bIndex, int numOfElements, bool wasTransposed = false) {
     T sum = T{}; // T{} is uniform initialization. Return 0 for numeric types
 
@@ -22,10 +24,10 @@ void multiplySingleColumn(std::vector<std::vector<T> > &result,
 
 
 template<typename T>
-std::vector<std::vector<T>> transposeMatrix(const std::vector<std::vector<T>>& matrix) {
+AvxAlignedMatrix<T> transposeMatrix(const AvxAlignedMatrix<T>& matrix) {
     int rows = matrix.size();
     int cols = matrix[0].size();
-    std::vector<std::vector<T>> transposed(cols, std::vector<T>(rows));
+    auto transposed = createAvxAlignedMatrix<T>(cols, rows);
 
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {

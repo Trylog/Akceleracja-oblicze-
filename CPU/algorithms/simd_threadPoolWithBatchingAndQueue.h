@@ -9,21 +9,22 @@
 #include <queue>
 #include <condition_variable>
 
-#include "_helperFunctions.h"
-#include "_simdMultiplicationFunctions.h"
+#include "avxAlignedVector.h"
+#include "algorithms/_helperFunctions.h"
+#include "algorithms/_simdMultiplicationFunctions.h"
 
 
 template<typename T>
-void avx2_threadPoolWithBatchingAndQueueWorker(std::vector<std::vector<T>>& resultMatrix,
-                                               const std::vector<std::vector<T>>& a,
-                                               const std::vector<std::vector<T>>& b,
+void avx2_threadPoolWithBatchingAndQueueWorker(AvxAlignedMatrix<T> &resultMatrix,
+                                               const AvxAlignedMatrix<T> &a,
+                                               const AvxAlignedMatrix<T> &b,
                                                int numOfElements,
                                                std::queue<std::pair<int, int>>& tasks,
                                                std::mutex& mtx, std::condition_variable& cv,
                                                bool& done,
-                                               std::function<void(const std::vector<std::vector<T>>&,
-                                                                  const std::vector<std::vector<T>>&,
-                                                                  std::vector<std::vector<T>>&,
+                                               std::function<void(const AvxAlignedMatrix<T>&,
+                                                                  const AvxAlignedMatrix<T>&,
+                                                                  AvxAlignedMatrix<T>&,
                                                                   int, int, int, int)> multiplyFunc) {
     const int simdSizeBytes = 32;
     const int numOfVariablesPerSimd = simdSizeBytes / sizeof(T);
@@ -50,15 +51,15 @@ void avx2_threadPoolWithBatchingAndQueueWorker(std::vector<std::vector<T>>& resu
 
 
 template <typename T>
-std::vector<std::vector<T>> AVX_threadPoolWithBatchingAndQueue(const std::vector<std::vector<T>>& a,
-                                                               const std::vector<std::vector<T>>& b) {
+AvxAlignedMatrix<T> AVX_threadPoolWithBatchingAndQueue(const AvxAlignedMatrix<T> &a,
+                                                       const AvxAlignedMatrix<T> &b) {
     int rowsA = a.size();
     int rowsB = b.size();
     int columnsB = b[0].size();
     int numOfElements = rowsB;
 
-    std::vector<std::vector<T>> resultMatrix(rowsA, std::vector<T>(columnsB, 0));
-    const std::vector<std::vector<T>>& newB = transposeMatrix(b); // Ensure this function is defined
+    AvxAlignedMatrix<T> resultMatrix = createAvxAlignedMatrix<T>(rowsA, columnsB);
+    const AvxAlignedMatrix<T> &newB = transposeMatrix(b);
 
     const unsigned int maxNumberOfCPUCores = std::thread::hardware_concurrency();
 
@@ -74,9 +75,9 @@ std::vector<std::vector<T>> AVX_threadPoolWithBatchingAndQueue(const std::vector
     }
 
     // Define multiplyFunc based on type
-    std::function<void(const std::vector<std::vector<T>>&,
-                       const std::vector<std::vector<T>>&,
-                       std::vector<std::vector<T>>&,
+    std::function<void(const AvxAlignedMatrix<T>&,
+                       const AvxAlignedMatrix<T>&,
+                       AvxAlignedMatrix<T>&,
                        int, int, int, int)> multiplyFunc;
 
     if constexpr (std::is_same_v<T, float>) {

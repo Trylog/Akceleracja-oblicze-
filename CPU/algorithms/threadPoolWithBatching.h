@@ -6,12 +6,13 @@
 #include <queue>
 #include <condition_variable>
 
-#include "_helperFunctions.h"
+#include "avxAlignedVector.h"
+#include "algorithms/_helperFunctions.h"
 
 template <typename T>
-void threadPoolWithBatchingWorker(std::vector<std::vector<T>>& resultMatrix,
-                                  const std::vector<std::vector<T>>& a,
-                                  const std::vector<std::vector<T>>& b,
+void threadPoolWithBatchingWorker(AvxAlignedMatrix<T> &resultMatrix,
+                                  const AvxAlignedMatrix<T> &a,
+                                  const AvxAlignedMatrix<T> &b,
                                   bool withTransposition,
                                   int numOfElements, int aMaxSize, int bMaxSize,
                                   int& aIndex, int& bIndex, std::mutex& mtx) {
@@ -42,16 +43,16 @@ void threadPoolWithBatchingWorker(std::vector<std::vector<T>>& resultMatrix,
 
 
 template<typename T>
-std::vector<std::vector<T>> threadPoolWithBathing(const std::vector<std::vector<T>>& a,
-                                                  const std::vector<std::vector<T>>& b,
-                                                  bool withTransposition) {
+AvxAlignedMatrix<T> threadPoolWithBathing(const AvxAlignedMatrix<T>& a,
+                                          const AvxAlignedMatrix<T>& b,
+                                          bool withTransposition) {
     int rowsA = a.size();
     int columnsB = b[0].size();
     int numOfElements = b.size();
 
-    std::vector<std::vector<T>> resultMatrix(rowsA, std::vector<T>(columnsB, 0));
+    AvxAlignedMatrix<T> resultMatrix = createAvxAlignedMatrix<T>(rowsA, columnsB);
     // Optionally transpose matrix b if needed
-    const std::vector<std::vector<T>>& newB = withTransposition ? transposeMatrix(b) : b;
+    const AvxAlignedMatrix<T> &newB = withTransposition ? transposeMatrix(b) : b;
 
     const unsigned int maxNumberOfCPUCores = std::thread::hardware_concurrency();
     int aIndex = 0;
