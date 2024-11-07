@@ -5,51 +5,51 @@ C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMe
     	T scale = max - min;
     	  ^
             detected during:
-              instantiation of "void randomizeMatrices(int, int, int, T *, T *) [with T=int8_t]" at line 154
-              instantiation of "void distinguish<T,U>(int, int, int, T *, T *) [with T=int8_t, U=int32_t]" at line 246
-              instantiation of "void program<T>() [with T=int8_t]" at line 263
+              instantiation of "void randomizeMatrices(int, int, int, T *, T *) [with T=int8_t]" at line 160
+              instantiation of "void distinguish<T,U>(int, int, int, T *, T *) [with T=int8_t, U=int32_t]" at line 252
+              instantiation of "void program<T>() [with T=int8_t]" at line 269
   
   Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
   
   kernel.cu
-  tmpxft_000052dc_00000000-7_kernel.cudafe1.cpp
-C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(245): warning C4984: 'if constexpr' is a C++17 language extension
-  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(245): note: the template instantiation context (the oldest one first) is
-  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(262): note: see reference to function template instantiation 'void program<float>(void)' being compiled
-C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(187): warning C4984: 'if constexpr' is a C++17 language extension
-  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(187): note: the template instantiation context (the oldest one first) is
-  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(262): note: see reference to function template instantiation 'void program<float>(void)' being compiled
-  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(249): note: see reference to function template instantiation 'void distinguish<T,T>(int,int,int,T *,T *)' being compiled
+  tmpxft_0000394c_00000000-7_kernel.cudafe1.cpp
+C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(251): warning C4984: 'if constexpr' is a C++17 language extension
+  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(251): note: the template instantiation context (the oldest one first) is
+  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(268): note: see reference to function template instantiation 'void program<float>(void)' being compiled
+C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(193): warning C4984: 'if constexpr' is a C++17 language extension
+  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(193): note: the template instantiation context (the oldest one first) is
+  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(268): note: see reference to function template instantiation 'void program<float>(void)' being compiled
+  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(255): note: see reference to function template instantiation 'void distinguish<T,T>(int,int,int,T *,T *)' being compiled
           with
           [
               T=float
           ]
-C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(190): warning C4984: 'if constexpr' is a C++17 language extension
+C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(196): warning C4984: 'if constexpr' is a C++17 language extension
 C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(56): warning C4984: 'if constexpr' is a C++17 language extension
   C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(56): note: the template instantiation context (the oldest one first) is
-  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(249): note: see reference to function template instantiation 'void distinguish<T,T>(int,int,int,T *,T *)' being compiled
+  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(255): note: see reference to function template instantiation 'void distinguish<T,T>(int,int,int,T *,T *)' being compiled
           with
           [
               T=float
           ]
-  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(154): note: see reference to function template instantiation 'void randomizeMatrices<T>(int,int,int,T *,T *)' being compiled
+  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(160): note: see reference to function template instantiation 'void randomizeMatrices<T>(int,int,int,T *,T *)' being compiled
           with
           [
               T=float
           ]
 C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(77): warning C4984: 'if constexpr' is a C++17 language extension
-C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(120): warning C4244: '=': conversion from 'int' to 'T', possible loss of data
+C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(126): warning C4244: '=': conversion from 'int' to 'T', possible loss of data
           with
           [
               T=float
           ]
-  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(120): note: the template instantiation context (the oldest one first) is
-  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(157): note: see reference to function template instantiation 'void fixedMatrices<T>(int,int,int,T *,T *)' being compiled
+  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(126): note: the template instantiation context (the oldest one first) is
+  C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(163): note: see reference to function template instantiation 'void fixedMatrices<T>(int,int,int,T *,T *)' being compiled
           with
           [
               T=float
           ]
-C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(127): warning C4244: '=': conversion from 'int' to 'T', possible loss of data
+C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(133): warning C4244: '=': conversion from 'int' to 'T', possible loss of data
           with
           [
               T=float
@@ -59,19 +59,4 @@ C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMe
 C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\UnifiedMemory\kernel.cu(86): warning C4984: 'if constexpr' is a C++17 language extension
      Creating library C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\x64\Debug\UnifiedMemory.lib and object C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\x64\Debug\UnifiedMemory.exp
 LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
-kernel.cu.obj : error LNK2019: unresolved external symbol cublasCreate_v2 referenced in function "void __cdecl distinguish<signed char,int>(int,int,int,signed char *,signed char *)" (??$distinguish@CH@@YAXHHHPEAC0@Z)
-kernel.cu.obj : error LNK2019: unresolved external symbol cublasDestroy_v2 referenced in function "void __cdecl distinguish<signed char,int>(int,int,int,signed char *,signed char *)" (??$distinguish@CH@@YAXHHHPEAC0@Z)
-kernel.cu.obj : error LNK2019: unresolved external symbol cublasGetMatrix referenced in function "void __cdecl distinguish<signed char,int>(int,int,int,signed char *,signed char *)" (??$distinguish@CH@@YAXHHHPEAC0@Z)
-kernel.cu.obj : error LNK2019: unresolved external symbol cublasSscal_v2 referenced in function "void __cdecl randomizeMatrices<float>(int,int,int,float *,float *)" (??$randomizeMatrices@M@@YAXHHHPEAM0@Z)
-kernel.cu.obj : error LNK2019: unresolved external symbol cublasDscal_v2 referenced in function "void __cdecl randomizeMatrices<double>(int,int,int,double *,double *)" (??$randomizeMatrices@N@@YAXHHHPEAN0@Z)
-kernel.cu.obj : error LNK2019: unresolved external symbol cublasSaxpy_v2 referenced in function "void __cdecl randomizeMatrices<float>(int,int,int,float *,float *)" (??$randomizeMatrices@M@@YAXHHHPEAM0@Z)
-kernel.cu.obj : error LNK2019: unresolved external symbol cublasDaxpy_v2 referenced in function "void __cdecl randomizeMatrices<double>(int,int,int,double *,double *)" (??$randomizeMatrices@N@@YAXHHHPEAN0@Z)
-kernel.cu.obj : error LNK2019: unresolved external symbol cublasSgemm_v2 referenced in function "void __cdecl distinguish<float,float>(int,int,int,float *,float *)" (??$distinguish@MM@@YAXHHHPEAM0@Z)
-kernel.cu.obj : error LNK2019: unresolved external symbol cublasDgemm_v2 referenced in function "void __cdecl distinguish<double,double>(int,int,int,double *,double *)" (??$distinguish@NN@@YAXHHHPEAN0@Z)
-kernel.cu.obj : error LNK2019: unresolved external symbol cublasGemmEx referenced in function "void __cdecl distinguish<signed char,int>(int,int,int,signed char *,signed char *)" (??$distinguish@CH@@YAXHHHPEAC0@Z)
-kernel.cu.obj : error LNK2019: unresolved external symbol curandCreateGenerator referenced in function "void __cdecl randomizeMatrices<signed char>(int,int,int,signed char *,signed char *)" (??$randomizeMatrices@C@@YAXHHHPEAC0@Z)
-kernel.cu.obj : error LNK2019: unresolved external symbol curandDestroyGenerator referenced in function "void __cdecl randomizeMatrices<signed char>(int,int,int,signed char *,signed char *)" (??$randomizeMatrices@C@@YAXHHHPEAC0@Z)
-kernel.cu.obj : error LNK2019: unresolved external symbol curandSetPseudoRandomGeneratorSeed referenced in function "void __cdecl randomizeMatrices<signed char>(int,int,int,signed char *,signed char *)" (??$randomizeMatrices@C@@YAXHHHPEAC0@Z)
-kernel.cu.obj : error LNK2019: unresolved external symbol curandGenerateUniform referenced in function "void __cdecl randomizeMatrices<float>(int,int,int,float *,float *)" (??$randomizeMatrices@M@@YAXHHHPEAM0@Z)
-kernel.cu.obj : error LNK2019: unresolved external symbol curandGenerateUniformDouble referenced in function "void __cdecl randomizeMatrices<double>(int,int,int,double *,double *)" (??$randomizeMatrices@N@@YAXHHHPEAN0@Z)
-C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\x64\Debug\UnifiedMemory.exe : fatal error LNK1120: 15 unresolved externals
+  UnifiedMemory.vcxproj -> C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\x64\Debug\UnifiedMemory.exe

@@ -52,7 +52,6 @@ void randomizeMatrices(int m, int n, int k, T* A, T* B) {
 	curandSetPseudoRandomGeneratorSeed(generator, clock());
 
 	//3. Generate random numbers
-
 	if constexpr (std::is_same<T, float>::value) {
 		curandGenerateUniform(generator, A, m * n);
 		curandGenerateUniform(generator, B, n * k);
@@ -62,12 +61,12 @@ void randomizeMatrices(int m, int n, int k, T* A, T* B) {
 		curandGenerateUniformDouble(generator, B, n * k);
 	}
 	else {
-		srand(time(NULL));
+		srand(static_cast<unsigned int>(time(NULL)));
 	}
 
 	// Scaling range to [-10, 10]
-	T min = -10;
-	T max = 10;
+	T min = -128;
+	T max = 127;
 	T scale = max - min;
 
 	// Scale each element in d_A and d_B
@@ -95,11 +94,13 @@ void randomizeMatrices(int m, int n, int k, T* A, T* B) {
 	else {
 		//For integers, there's no method to generate numbers in cublas library, so classicaly:
 		for (int i = 0; i < m * n; i++) {
-			A[i] = static_cast<T>(rand() % (max - min + 1)) + min;
+			A[i] = static_cast<T>(rand() % (256 - 128));
+			cout << static_cast<int>(A[i]) << endl;
 		}
 
 		for (int i = 0; i < n * k; i++) {
-			B[i] = static_cast<T>(rand() % (max - min + 1)) + min;
+			B[i] = static_cast<T>(rand() % (256 - 128));
+			cout << static_cast<int>(B[i]) << endl;
 		}
 	}
 
@@ -107,8 +108,8 @@ void randomizeMatrices(int m, int n, int k, T* A, T* B) {
 	curandDestroyGenerator(generator);
 
 	//input matrices are stored in column-major order
-	printMatrixColumnMajorOrder(A, m, n, "A");
-	printMatrixColumnMajorOrder(B, n, k, "B");
+	//printMatrixColumnMajorOrder(A, m, n, "A");
+	//printMatrixColumnMajorOrder(B, n, k, "B");
 }
 
 template <typename T>
@@ -129,8 +130,8 @@ void fixedMatrices(int m, int n, int k, T* A, T* B) {
 	}
 
 	//input matrices are stored in column-major order
-	printMatrixColumnMajorOrder(A, m, n, "A");
-	printMatrixColumnMajorOrder(B, n, k, "B");
+	//printMatrixColumnMajorOrder(A, m, n, "A");
+	//printMatrixColumnMajorOrder(B, n, k, "B");
 }
 
 template <typename T, typename U>
@@ -200,10 +201,10 @@ void distinguish(int m, int n, int k, T* A, T* B) {
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
 
-	cout << endl << "It took: " << elapsedTime << " seconds" << endl;
+	cout << endl << "It took: " << elapsedTime << " milliseconds" << endl;
 
 	//output matrix is stored in column-major order
-	printMatrixColumnMajorOrder<U>(C, m, k, "score");
+	//printMatrixColumnMajorOrder<U>(C, m, k, "score");
 
 	//free up memory
 	cudaFreeHost(A);

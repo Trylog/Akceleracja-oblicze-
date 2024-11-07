@@ -54,8 +54,8 @@ void randomizeMatrices(int m, int n, int k, T* A, T* B) {
 	//3. Generate random numbers
 
 	if constexpr (std::is_same<T, float>::value) {
-		curandGenerateUniform(generator, A, m * n);
-		curandGenerateUniform(generator, B, n * k);
+		cout << curandGenerateUniform(generator, A, m * n) << endl;
+		cout << curandGenerateUniform(generator, B, n * k);
 	}
 	else if constexpr (std::is_same<T, double>::value) {
 		curandGenerateUniformDouble(generator, A, m * n);
@@ -107,8 +107,14 @@ void randomizeMatrices(int m, int n, int k, T* A, T* B) {
 	curandDestroyGenerator(generator);
 
 	//input matrices are stored in column-major order
-	printMatrixColumnMajorOrder(A, m, n, "A");
-	printMatrixColumnMajorOrder(B, n, k, "B");
+	//wait for all operations to finish to use this data
+
+	//if u want to see generated matrices, also uncomment cudaDeviceSynchronize()!!!
+
+	//cudaDeviceSynchronize();
+	////print generated matrices
+	//printMatrixColumnMajorOrder(A, m, n, "A");
+	//printMatrixColumnMajorOrder(B, n, k, "B");
 }
 
 template <typename T>
@@ -129,8 +135,8 @@ void fixedMatrices(int m, int n, int k, T* A, T* B) {
 	}
 
 	//input matrices are stored in column-major order
-	printMatrixColumnMajorOrder(A, m, n, "A");
-	printMatrixColumnMajorOrder(B, n, k, "B");
+	//printMatrixColumnMajorOrder(A, m, n, "A");
+	//printMatrixColumnMajorOrder(B, n, k, "B");
 }
 
 template <typename T, typename U>
@@ -161,8 +167,8 @@ void distinguish(int m, int n, int k, T* A, T* B) {
 	cublasHandle_t handle;
 	cublasCreate(&handle);
 
-	T alpha = 1;
-	T beta = 0;
+	U alpha = 1;
+	U beta = 0;
 
 	//find leading dimensions of matrices
 	int lda = m;
@@ -211,10 +217,10 @@ void distinguish(int m, int n, int k, T* A, T* B) {
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
 
-	cout << endl << "It took: " << elapsedTime << " seconds" << endl;
+	cout << endl << "It took: " << elapsedTime << " milliseconds" << endl;
 
 	//output matrix is stored in column-major order
-	printMatrixColumnMajorOrder<U>(C, m, k, "score");
+	//printMatrixColumnMajorOrder<U>(C, m, k, "score");
 
 	//free up memory
 	cudaFreeHost(A);

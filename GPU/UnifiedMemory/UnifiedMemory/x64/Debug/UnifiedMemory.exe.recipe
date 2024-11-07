@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\cuBLAS\UnifiedMemory\x64\Debug\UnifiedMemory.exe</FullPath>
+      <FullPath>C:\Users\Adam Czekalski\Documents\GitHub\Akceleracja-obliczen-CUDA\GPU\UnifiedMemory\x64\Debug\UnifiedMemory.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />
