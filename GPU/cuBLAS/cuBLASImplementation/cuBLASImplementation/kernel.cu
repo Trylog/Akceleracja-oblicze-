@@ -28,10 +28,13 @@ void printMatrixColumnMajorOrder(T* M, int a, int b, string matrixName) {
 	for (int i = 0; i < a; i++) {
 		for (int j = 0; j < b; j++) {
 			if (std::is_same<T, int8_t>::value) {
-				cout << static_cast<int32_t>(M[i + j * a]) << ", ";
+				cout << static_cast<int32_t>(M[i + j * a]);
 			}
 			else {
-				cout << M[i + j * a] << ", ";
+				cout << M[i + j * a];
+			}
+			if (j < b - 1) {
+				cout << ", ";
 			}
 		}
 		cout << endl;
