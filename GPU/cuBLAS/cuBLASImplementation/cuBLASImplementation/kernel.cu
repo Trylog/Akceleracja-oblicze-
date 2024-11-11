@@ -27,7 +27,7 @@ void printMatrixColumnMajorOrder(T* M, int a, int b, string matrixName) {
 
 	for (int i = 0; i < a; i++) {
 		for (int j = 0; j < b; j++) {
-			if (std::is_same<T, uint8_t>::value) {
+			if (std::is_same<T, int8_t>::value) {
 				cout << static_cast<int32_t>(M[i + j * a]) << ", ";
 			}
 			else {
@@ -95,12 +95,10 @@ void randomizeMatrices(int m, int n, int k, T* A, T* B) {
 		//For integers, there's no method to generate numbers in cublas library, so classicaly:
 		for (int i = 0; i < m * n; i++) {
 			A[i] = static_cast<T>(rand() % (256 - 128));
-			cout << static_cast<int>(A[i]) << endl;
 		}
 
 		for (int i = 0; i < n * k; i++) {
 			B[i] = static_cast<T>(rand() % (256 - 128));
-			cout << static_cast<int>(B[i]) << endl;
 		}
 	}
 
@@ -108,8 +106,8 @@ void randomizeMatrices(int m, int n, int k, T* A, T* B) {
 	curandDestroyGenerator(generator);
 
 	//input matrices are stored in column-major order
-	//printMatrixColumnMajorOrder(A, m, n, "A");
-	//printMatrixColumnMajorOrder(B, n, k, "B");
+	printMatrixColumnMajorOrder(A, m, n, "A");
+	printMatrixColumnMajorOrder(B, n, k, "B");
 }
 
 template <typename T>
@@ -204,7 +202,7 @@ void distinguish(int m, int n, int k, T* A, T* B) {
 	cout << endl << "It took: " << elapsedTime << " milliseconds" << endl;
 
 	//output matrix is stored in column-major order
-	//printMatrixColumnMajorOrder<U>(C, m, k, "score");
+	printMatrixColumnMajorOrder<U>(C, m, k, "score");
 
 	//free up memory
 	cudaFreeHost(A);
