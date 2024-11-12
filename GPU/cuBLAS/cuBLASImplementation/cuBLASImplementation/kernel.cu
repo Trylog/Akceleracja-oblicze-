@@ -128,11 +128,9 @@ void randomizeMatrices(int m, int n, int k, T* A, T* B) {
 		for (int i = 0; i < closestN; i++) {
 			for (int j = 0; j < closestK; j++) {
 				if (i >= n || j >= k) {
-					cout << i * n + j << endl;
 					B[i * closestN + j] = 0;
 				}
 				else {
-					cout << i * n + j << endl;
 					B[i * closestN + j] = static_cast<T>(rand() % (256 - 128));
 				}
 			}
@@ -141,6 +139,20 @@ void randomizeMatrices(int m, int n, int k, T* A, T* B) {
 		printMatrixColumnMajorOrder(A, closestM, closestN, "A");
 		printMatrixColumnMajorOrder(B, closestN, closestK, "B");
 	}
+}
+
+int* removePadding(int* M, int closestM, int closestK, int m, int k) {
+	int* score = new int[m * k];
+
+	for (int i = 0; i < closestM; i++) {
+		for (int j = 0; j < closestK; j++) {
+			if (i < m || j < k) {
+				score[i * closestM + j] = M[i * closestM + j];
+			}
+		}
+	}
+
+	return score;
 }
 
 template <typename T, typename U>
@@ -251,7 +263,8 @@ void distinguish(int m, int n, int k, T* A, T* B) {
 		cout << endl << "It took: " << elapsedTime << " milliseconds" << endl;
 
 		//output matrix is stored in column-major order
-		printMatrixColumnMajorOrder<U>(C, closestM, closestK, "score");
+		int * score = removePadding(C, closestM, closestK, m, k);
+		printMatrixColumnMajorOrder<U>(score, m, k, "score");
 	}
 
 	//free up memory
