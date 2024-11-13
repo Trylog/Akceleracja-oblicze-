@@ -2,6 +2,7 @@
 #include <cublas_v2.h>
 #include <curand.h>
 #include <random>
+#include <fstream>
 
 using namespace std;
 
@@ -104,8 +105,8 @@ void randomizeMatrices(int m, int n, int k, T* A, T* B) {
 		cudaDeviceSynchronize();
 
 		//input matrices are stored in column-major order
-		printMatrixColumnMajorOrder(A, m, n, "A");
-		printMatrixColumnMajorOrder(B, n, k, "B");
+		//printMatrixColumnMajorOrder(A, m, n, "A");
+		//printMatrixColumnMajorOrder(B, n, k, "B");
 	}
 
 	//For integers, there's no method to generate numbers in curand library, so classicaly:
@@ -142,8 +143,8 @@ void randomizeMatrices(int m, int n, int k, T* A, T* B) {
 		cudaDeviceSynchronize();
 
 		//input matrices are stored in column-major order
-		printMatrixColumnMajorOrder(A, closestM, closestN, "A");
-		printMatrixColumnMajorOrder(B, closestN, closestK, "B");
+		//printMatrixColumnMajorOrder(A, closestM, closestN, "A");
+		//printMatrixColumnMajorOrder(B, closestN, closestK, "B");
 	}
 }
 
@@ -162,7 +163,7 @@ int* removePadding(int* M, int closestM, int closestK, int m, int k) {
 }
 
 template <typename T, typename U>
-void distinguish(int m, int n, int k, T* A, T* B) {
+float distinguish(int m, int n, int k, T* A, T* B) {
 	int id = cudaGetDevice(&id);
 	U* C;
 	//score matrix in native memory
@@ -189,6 +190,8 @@ void distinguish(int m, int n, int k, T* A, T* B) {
 
 	U alpha = 1;
 	U beta = 0;
+
+	float elapsedTime;
 
 	if constexpr (std::is_same<U, float>::value || std::is_same<U, double>::value) {
 		//find leading dimensions of matrices
@@ -233,7 +236,6 @@ void distinguish(int m, int n, int k, T* A, T* B) {
 		//stop event
 		cudaEventRecord(stop, 0);
 		cudaEventSynchronize(stop);
-		float elapsedTime;
 		cudaEventElapsedTime(&elapsedTime, start, stop);
 		cudaEventDestroy(start);
 		cudaEventDestroy(stop);
@@ -241,7 +243,7 @@ void distinguish(int m, int n, int k, T* A, T* B) {
 		cout << endl << "It took: " << elapsedTime << " milliseconds" << endl;
 
 		//output matrix is stored in column-major order
-		printMatrixColumnMajorOrder<U>(C, m, k, "score");
+		//printMatrixColumnMajorOrder<U>(C, m, k, "score");
 	}
 
 	else {
@@ -281,7 +283,6 @@ void distinguish(int m, int n, int k, T* A, T* B) {
 		//stop event
 		cudaEventRecord(stop, 0);
 		cudaEventSynchronize(stop);
-		float elapsedTime;
 		cudaEventElapsedTime(&elapsedTime, start, stop);
 		cudaEventDestroy(start);
 		cudaEventDestroy(stop);
@@ -290,7 +291,7 @@ void distinguish(int m, int n, int k, T* A, T* B) {
 
 		//output matrix is stored in column-major order
 		int* score = removePadding(C, closestM, closestK, m, k);
-		printMatrixColumnMajorOrder<U>(score, m, k, "score");
+		//printMatrixColumnMajorOrder<U>(score, m, k, "score");
 	}
 
 	//free up memory
@@ -299,6 +300,8 @@ void distinguish(int m, int n, int k, T* A, T* B) {
 	cudaFreeHost(C);
 	cudaFreeHost(D);
 	cublasDestroy(handle);
+
+	return elapsedTime;
 }
 
 //generic
@@ -327,17 +330,109 @@ void program() {
 	}
 }
 
-int main() {
-	int dataType;
-	cout << "Choose data type: " << endl;
-	cout << "1. Float" << endl;
-	cout << "2. Integer" << endl;
-	cout << "3. Double" << endl;
-	cin >> dataType;
+//generic
+template <typename T>
+float programFixed(int dimension) {
+	//Allocate memory
+	//two matrices
+	int m = dimension;
+	int n = dimension;
+	int k = dimension;
 
-	switch (dataType) {
-	case 1: program<float>(); break;
-	case 2: program<int8_t>(); break;
-	case 3: program<double>(); break;
+	T* A, * B;
+
+	if (std::is_same<T, double>::value || std::is_same<T, float>::value) {
+		cudaMallocHost(&A, m * n * sizeof(T));
+		cudaMallocHost(&B, n * k * sizeof(T));
+	}
+	//int8_t, dimensions have to be multiplication of 4
+	else {
+		int closestM = ((m + 3) / 4) * 4;
+		int closestN = ((n + 3) / 4) * 4;
+
+		int closestK = ((k + 3) / 4) * 4;
+
+		cudaMallocHost(&A, closestM * closestN * sizeof(T));
+		cudaMallocHost(&B, closestN * closestK * sizeof(T));
+	}
+
+	float elapsedTime;
+	//score matrix in GPU memory
+	//for 8bit integers - score is 32 bits
+	if constexpr (std::is_same<T, int8_t>::value) {
+		elapsedTime = distinguish<T, int32_t>(m, n, k, A, B);
+	}
+	else {
+		elapsedTime = distinguish<T, T>(m, n, k, A, B);
+	}
+
+	return elapsedTime;
+}
+
+void tests() {
+	fstream file;
+	file.open("floats.txt", ios::out);
+
+	int matrixSize[13] = { 10, 50, 100, 250, 1000, 2500, 5000, 10000, 12500, 15000, 17500, 20000, 25000 };
+
+	float elapsedTime;
+
+	/*cout << endl;
+
+	for (int i = 0; i < 13; i++) {
+		cout << "Float, size: " << matrixSize[i] << endl;
+		elapsedTime = programFixed<float>(matrixSize[i]);
+		file << elapsedTime;
+	}
+
+	cout << endl;*/
+
+	file.close();
+	file.open("doubles.txt", ios::out);
+
+	for (int i = 0; i < 13; i++) {
+		cout << "Double, size: " << matrixSize[i] << endl;
+		elapsedTime = programFixed<double>(matrixSize[i]);
+		file << elapsedTime;
+	}
+
+	cout << endl;
+
+	/*file.close();
+	file.open("integers.txt", ios::out);
+
+	for (int i = 0; i < 13; i++) {
+		cout << "Int, size: " << matrixSize[i] << endl;
+		elapsedTime = programFixed<int8_t>(matrixSize[i]);
+		file << elapsedTime;
+	}*/
+
+	file.close();
+
+}
+
+int main() {
+	int testingOption;
+	cout << "Tests?: " << endl;
+	cout << "1. No testing" << endl;
+	cout << "2. Testing" << endl;
+	cin >> testingOption;
+
+	if (testingOption == 1) {
+		int dataType;
+		cout << endl << "Choose data type: " << endl;
+		cout << "1. Float" << endl;
+		cout << "2. Integer" << endl;
+		cout << "3. Double" << endl;
+		cin >> dataType;
+
+		switch (dataType) {
+		case 1: program<float>(); break;
+		case 2: program<int8_t>(); break;
+		case 3: program<double>(); break;
+		}
+	}
+	else {
+		tests();
 	}
 }

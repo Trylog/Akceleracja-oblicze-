@@ -2,6 +2,7 @@
 #include <cublas_v2.h>
 #include <curand.h>
 #include <random>
+#include <fstream>
 
 using namespace std;
 
@@ -42,7 +43,7 @@ void printMatrixColumnMajorOrder(T* M, int a, int b, string matrixName) {
 }
 
 template <typename T>
-void randomizeMatrices(int m, int n, int k, T* A, T* B) {
+void randomizeMatrices(int m, int n, int k, T* A, T* B, T* A_device, T* B_device) {
 	
 	//Generating matrices
 	//float, double
@@ -102,8 +103,11 @@ void randomizeMatrices(int m, int n, int k, T* A, T* B) {
 		curandDestroyGenerator(generator);
 
 		//input matrices are stored in column-major order
-		printMatrixColumnMajorOrder(A, m, n, "A");
-		printMatrixColumnMajorOrder(B, n, k, "B");
+		//printMatrixColumnMajorOrder(A, m, n, "A");
+		//printMatrixColumnMajorOrder(B, n, k, "B");
+
+		cudaMemcpy(A_device, A, m * n * sizeof(T), cudaMemcpyHostToDevice);
+		cudaMemcpy(B_device, B, n * k * sizeof(T), cudaMemcpyHostToDevice);
 	}
 
 	//For integers, there's no method to generate numbers in curand library, so classicaly:
@@ -136,8 +140,8 @@ void randomizeMatrices(int m, int n, int k, T* A, T* B) {
 			}
 		}
 		//input matrices are stored in column-major order
-		printMatrixColumnMajorOrder(A, closestM, closestN, "A");
-		printMatrixColumnMajorOrder(B, closestN, closestK, "B");
+		//printMatrixColumnMajorOrder(A, closestM, closestN, "A");
+		//printMatrixColumnMajorOrder(B, closestN, closestK, "B");
 	}
 }
 
@@ -156,25 +160,25 @@ int* removePadding(int* M, int closestM, int closestK, int m, int k) {
 }
 
 template <typename T, typename U>
-void distinguish(int m, int n, int k, T* A, T* B) {
+float distinguish(int m, int n, int k, T* A, T* B, T* A_device, T* B_device) {
 	U* C;
 	//score matrix in native memory
 	U* D;
 
 	if (std::is_same<T, double>::value || std::is_same<T, float>::value) {
-		cudaMallocHost(&C, m * k * sizeof(U));
+		cudaMalloc(&C, m * k * sizeof(U));
 		cudaMallocHost(&D, m * k * sizeof(U));
 	}
 	else {
 		int closestM = ((m + 3) / 4) * 4;
 		int closestK = ((k + 3) / 4) * 4;
 
-		cudaMallocHost(&C, closestM * closestK * sizeof(U));
+		cudaMalloc(&C, closestM * closestK * sizeof(U));
 		cudaMallocHost(&D, closestM * closestK * sizeof(U));
 	}
 	
 
-	randomizeMatrices<T>(m, n, k, A, B);
+	randomizeMatrices<T>(m, n, k, A, B, A_device, B_device);
 
 	//Multiplication operation
 	cublasHandle_t handle;
@@ -185,6 +189,8 @@ void distinguish(int m, int n, int k, T* A, T* B) {
 
 	//CUBLAS_OP_N - non-transpose operation
 	//cublasSgemm(h,transpA,transpB,m,k,n,&alpha,&A,lda,&B,ldb,&beta,&C,ldc)
+
+	float elapsedTime;
 
 	if constexpr (std::is_same<U, float>::value || std::is_same<U, double>::value) {
 		//find leading dimensions of matrices
@@ -217,15 +223,14 @@ void distinguish(int m, int n, int k, T* A, T* B) {
 		//stop event
 		cudaEventRecord(stop, 0);
 		cudaEventSynchronize(stop);
-		float elapsedTime;
 		cudaEventElapsedTime(&elapsedTime, start, stop);
 		cudaEventDestroy(start);
 		cudaEventDestroy(stop);
 
-		cout << endl << "It took: " << elapsedTime << " milliseconds" << endl;
+		cout << "It took: " << elapsedTime << " milliseconds" << endl;
 
 		//output matrix is stored in column-major order
-		printMatrixColumnMajorOrder<U>(C, m, k, "score");
+		//printMatrixColumnMajorOrder<U>(D, m, k, "score");
 	}
 
 	else {
@@ -255,24 +260,27 @@ void distinguish(int m, int n, int k, T* A, T* B) {
 		//stop event
 		cudaEventRecord(stop, 0);
 		cudaEventSynchronize(stop);
-		float elapsedTime;
 		cudaEventElapsedTime(&elapsedTime, start, stop);
 		cudaEventDestroy(start);
 		cudaEventDestroy(stop);
 
-		cout << endl << "It took: " << elapsedTime << " milliseconds" << endl;
+		cout << "It took: " << elapsedTime << " milliseconds" << endl;
 
 		//output matrix is stored in column-major order
 		int * score = removePadding(C, closestM, closestK, m, k);
-		printMatrixColumnMajorOrder<U>(score, m, k, "score");
+		//printMatrixColumnMajorOrder<U>(score, m, k, "score");
 	}
 
 	//free up memory
 	cudaFreeHost(A);
 	cudaFreeHost(B);
-	cudaFreeHost(C);
+	cudaFree(A_device);
+	cudaFree(B_device);
+	cudaFree(C);
 	cudaFreeHost(D);
 	cublasDestroy(handle);
+
+	return elapsedTime;
 }
 
 //generic
@@ -287,10 +295,14 @@ void program() {
 	//Allocate memory
 	//two matrices
 	T* A, * B;
+	T* A_device, * B_device;
 
 	if (std::is_same<T, double>::value || std::is_same<T, float>::value) {
 		cudaMallocHost(&A, m * n * sizeof(T));
 		cudaMallocHost(&B, n * k * sizeof(T));
+
+		cudaMalloc(&A_device, m * n * sizeof(T));
+		cudaMalloc(&B_device, n * k * sizeof(T));
 	}
 	//int8_t, dimensions have to be multiplication of 4
 	else {
@@ -301,30 +313,131 @@ void program() {
 
 		cudaMallocHost(&A, closestM * closestN * sizeof(T));
 		cudaMallocHost(&B, closestN * closestK * sizeof(T));
+
+		cudaMalloc(&A_device, closestM * closestN * sizeof(T));
+		cudaMalloc(&B_device, closestN * closestK * sizeof(T));
 	}
 	
-
 	//score matrix in GPU memory
 	//for 8bit integers - score is 32 bits
 	if constexpr (std::is_same<T, int8_t>::value) {
-		distinguish<T, int32_t>(m, n, k, A, B);
+		distinguish<T, int32_t>(m, n, k, A, B, A_device, B_device);
 	}
 	else {
-		distinguish<T, T>(m, n, k, A, B);
+		distinguish<T, T>(m, n, k, A, B, A_device, B_device);
 	}
 }
 
-int main() {
-	int dataType;
-	cout << "Choose data type: " << endl;
-	cout << "1. Float" << endl;
-	cout << "2. Integer" << endl;
-	cout << "3. Double" << endl;
-	cin >> dataType;
+//generic
+template <typename T>
+float programFixed(int dimension) {
+	//Allocate memory
+	//two matrices
+	int m = dimension;
+	int n = dimension;
+	int k = dimension;
 
-	switch (dataType) {
-	case 1: program<float>(); break;
-	case 2: program<int8_t>(); break;
-	case 3: program<double>(); break;
+	T* A, * B;
+	T* A_device, * B_device;
+
+	if (std::is_same<T, double>::value || std::is_same<T, float>::value) {
+		cudaMallocHost(&A, m * n * sizeof(T));
+		cudaMallocHost(&B, n * k * sizeof(T));
+
+		cudaMalloc(&A_device, m * n * sizeof(T));
+		cudaMalloc(&B_device, n * k * sizeof(T));
+	}
+	//int8_t, dimensions have to be multiplication of 4
+	else {
+		int closestM = ((m + 3) / 4) * 4;
+		int closestN = ((n + 3) / 4) * 4;
+
+		int closestK = ((k + 3) / 4) * 4;
+
+		cudaMallocHost(&A, closestM * closestN * sizeof(T));
+		cudaMallocHost(&B, closestN * closestK * sizeof(T));
+
+		cudaMalloc(&A_device, closestM * closestN * sizeof(T));
+		cudaMalloc(&B_device, closestN * closestK * sizeof(T));
+	}
+
+	float elapsedTime;
+	//score matrix in GPU memory
+	//for 8bit integers - score is 32 bits
+	if constexpr (std::is_same<T, int8_t>::value) {
+		elapsedTime = distinguish<T, int32_t>(m, n, k, A, B, A_device, B_device);
+	}
+	else {
+		elapsedTime = distinguish<T, T>(m, n, k, A, B, A_device, B_device);
+	}
+
+	return elapsedTime;
+}
+
+void tests() {
+	fstream file;
+	file.open("floats.txt", ios::out);
+
+	int matrixSize[13] = {10, 50, 100, 250, 1000, 2500, 5000, 10000, 12500, 15000, 17500, 20000, 25000};
+
+	float elapsedTime;
+
+	/*cout << endl;
+
+	for (int i = 0; i < 13; i++) {
+		cout << "Float, size: " << matrixSize[i] << endl;
+		elapsedTime = programFixed<float>(matrixSize[i]);
+		file << elapsedTime;
+	}
+
+	cout << endl;
+
+	file.close();
+	file.open("doubles.txt", ios::out);
+
+	for (int i = 0; i < 13; i++) {
+		cout << "Double, size: " << matrixSize[i] << endl;
+		elapsedTime = programFixed<double>(matrixSize[i]);
+		file << elapsedTime;
+	}
+
+	cout << endl;*/
+
+	file.close();
+	file.open("integers.txt", ios::out);
+
+	for (int i = 0; i < 13; i++) {
+		cout << "Int, size: " << matrixSize[i] << endl;
+		elapsedTime = programFixed<int8_t>(matrixSize[i]);
+		file << elapsedTime;
+	}
+
+	file.close();
+
+}
+
+int main() {
+	int testingOption;
+	cout << "Tests?: " << endl;
+	cout << "1. No testing" << endl;
+	cout << "2. Testing" << endl;
+	cin >> testingOption;
+
+	if (testingOption == 1) {
+		int dataType;
+		cout << endl << "Choose data type: " << endl;
+		cout << "1. Float" << endl;
+		cout << "2. Integer" << endl;
+		cout << "3. Double" << endl;
+		cin >> dataType;
+
+		switch (dataType) {
+			case 1: program<float>(); break;
+			case 2: program<int8_t>(); break;
+			case 3: program<double>(); break;
+		}
+	}
+	else {
+		tests();
 	}
 }
