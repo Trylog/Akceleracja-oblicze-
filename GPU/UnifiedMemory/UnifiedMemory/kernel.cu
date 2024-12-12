@@ -377,15 +377,15 @@ void tests() {
 
 	float elapsedTime;
 
-	/*cout << endl;
+	cout << endl;
 
 	for (int i = 0; i < 13; i++) {
 		cout << "Float, size: " << matrixSize[i] << endl;
 		elapsedTime = programFixed<float>(matrixSize[i]);
-		file << elapsedTime;
+		file << elapsedTime << endl;
 	}
 
-	cout << endl;*/
+	cout << endl;
 
 	file.close();
 	file.open("doubles.txt", ios::out);
@@ -393,19 +393,19 @@ void tests() {
 	for (int i = 0; i < 13; i++) {
 		cout << "Double, size: " << matrixSize[i] << endl;
 		elapsedTime = programFixed<double>(matrixSize[i]);
-		file << elapsedTime;
+		file << elapsedTime << endl;
 	}
 
 	cout << endl;
 
-	/*file.close();
+	file.close();
 	file.open("integers.txt", ios::out);
 
 	for (int i = 0; i < 13; i++) {
 		cout << "Int, size: " << matrixSize[i] << endl;
 		elapsedTime = programFixed<int8_t>(matrixSize[i]);
-		file << elapsedTime;
-	}*/
+		file << elapsedTime << endl;
+	}
 
 	file.close();
 

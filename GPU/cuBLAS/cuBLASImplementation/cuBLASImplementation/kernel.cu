@@ -220,6 +220,7 @@ float distinguish(int m, int n, int k, T* A, T* B, T* A_device, T* B_device) {
 		//cublasGetMatrix(int rows, int cols, int elemSize, const void* A, int lda, void* B, int ldb)
 		cublasGetMatrix(m, k, sizeof(U), C, ldc, D, ldc);
 
+		cout << "Start multiplying" << endl;
 		//stop event
 		cudaEventRecord(stop, 0);
 		cudaEventSynchronize(stop);
@@ -378,16 +379,16 @@ void tests() {
 	fstream file;
 	file.open("floats.txt", ios::out);
 
-	int matrixSize[13] = {10, 50, 100, 250, 1000, 2500, 5000, 10000, 12500, 15000, 17500, 20000, 25000};
+	int matrixSize[10] = {10, 50, 100, 250, 1000, 2500, 5000, 10000, 12500, 15000};
 
 	float elapsedTime;
 
-	/*cout << endl;
+	cout << endl;
 
-	for (int i = 0; i < 13; i++) {
+	for (int i = 0; i < 10; i++) {
 		cout << "Float, size: " << matrixSize[i] << endl;
 		elapsedTime = programFixed<float>(matrixSize[i]);
-		file << elapsedTime;
+		file << elapsedTime << endl;
 	}
 
 	cout << endl;
@@ -395,21 +396,21 @@ void tests() {
 	file.close();
 	file.open("doubles.txt", ios::out);
 
-	for (int i = 0; i < 13; i++) {
+	for (int i = 0; i < 10; i++) {
 		cout << "Double, size: " << matrixSize[i] << endl;
 		elapsedTime = programFixed<double>(matrixSize[i]);
-		file << elapsedTime;
+		file << elapsedTime << endl;
 	}
 
-	cout << endl;*/
+	cout << endl;
 
 	file.close();
 	file.open("integers.txt", ios::out);
 
-	for (int i = 0; i < 13; i++) {
+	for (int i = 0; i < 10; i++) {
 		cout << "Int, size: " << matrixSize[i] << endl;
 		elapsedTime = programFixed<int8_t>(matrixSize[i]);
-		file << elapsedTime;
+		file << elapsedTime << endl;
 	}
 
 	file.close();
