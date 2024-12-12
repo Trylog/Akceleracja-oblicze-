@@ -77,7 +77,7 @@ double measureExecutionTime(Func &&func, Args &&... args) {
 
     auto end = std::chrono::high_resolution_clock::now();
 
-    printMatrix(resultMatrix);
+    // printMatrix(resultMatrix);
 
     std::chrono::duration<double, std::micro> duration = end - start;
     return duration.count();
@@ -113,27 +113,27 @@ void printRuntimes(int rowsA, int columnsA, int rowsB, int columnsB) {
     auto b = generateRandomMatrix<T>(rowsB, columnsB);
 
     std::cout << "Matrix A: " << std::endl;
-    printMatrix(a);
+    // printMatrix(a);
     std::cout << "Matrix B: " << std::endl;
-    printMatrix(b);
+    // printMatrix(b);
     std::cout << std::endl << std::endl;
 
 
-    std::cout << "Single thread: " << std::endl;
-    double exec_time_single = execTimeSingleThread<T>(a, b);
-    std::cout << exec_time_single << " microseconds" << std::endl << std::endl;
-
-    std::cout << "Single thread SIMD: " << std::endl;
-    double exec_time_single_simd = execTimeSingleThreadSimd<T>(a, b);
-    std::cout << exec_time_single_simd << " microseconds" << std::endl << std::endl;
-
-    std::cout<< "Naive multi threads: " << std::endl;
-    double exec_time_naive_multi = execTimeNaiveMultiThreads<T>(a, b);
-    std::cout << exec_time_naive_multi << " microseconds" << std::endl << std::endl;
-
-    std::cout << "Thread pool with batching: " << std::endl;
-    double exec_time_thread_pool_batching = execTimeThreadPoolWithBatching<T>(a, b);
-    std::cout << exec_time_thread_pool_batching << " microseconds" << std::endl << std::endl;
+    // std::cout << "Single thread: " << std::endl;
+    // double exec_time_single = execTimeSingleThread<T>(a, b);
+    // std::cout << exec_time_single << " microseconds" << std::endl << std::endl;
+    //
+    // std::cout << "Single thread SIMD: " << std::endl;
+    // double exec_time_single_simd = execTimeSingleThreadSimd<T>(a, b);
+    // std::cout << exec_time_single_simd << " microseconds" << std::endl << std::endl;
+    //
+    // std::cout<< "Naive multi threads: " << std::endl;
+    // double exec_time_naive_multi = execTimeNaiveMultiThreads<T>(a, b);
+    // std::cout << exec_time_naive_multi << " microseconds" << std::endl << std::endl;
+    //
+    // std::cout << "Thread pool with batching: " << std::endl;
+    // double exec_time_thread_pool_batching = execTimeThreadPoolWithBatching<T>(a, b);
+    // std::cout << exec_time_thread_pool_batching << " microseconds" << std::endl << std::endl;
 
     std::cout << "Thread pool with batching and queue: " << std::endl;
     double exec_time_thread_pool_batching_queue = execTimeThreadPoolWithBatchingAndQueue<T>(a, b);

@@ -17,7 +17,7 @@ void threadPoolWithBatchingAndQueueWorker(AvxAlignedMatrix<T> &resultMatrix,
                                           int numOfElements,
                                           std::queue<std::pair<int, int>>& tasks,
                                           std::mutex& mtx, std::condition_variable& cv,
-                                          bool& done) {
+                                          bool& done, bool withTransposition) {
     while (true) {
         std::pair<int, int> task;
         {
@@ -34,7 +34,7 @@ void threadPoolWithBatchingAndQueueWorker(AvxAlignedMatrix<T> &resultMatrix,
         int j = task.second;
         multiplySingleColumn(resultMatrix, a, b,
                              i, j, numOfElements,
-                             true);
+                             withTransposition);
     }
 }
 
@@ -68,7 +68,7 @@ AvxAlignedMatrix<T> threadPoolWithBatchingAndQueue(const AvxAlignedMatrix<T> &a,
     for (unsigned int n = 0; n < maxNumberOfCPUCores; ++n) {
         threads.emplace_back(threadPoolWithBatchingAndQueueWorker<T>,
                              std::ref(resultMatrix), std::cref(a), std::cref(newB), numOfElements,
-                             std::ref(tasks), std::ref(mtx), std::ref(cv), std::ref(done)
+                             std::ref(tasks), std::ref(mtx), std::ref(cv), std::ref(done), std::ref(withTransposition)
         );
     }
 
