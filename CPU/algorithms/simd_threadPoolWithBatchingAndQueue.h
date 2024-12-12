@@ -19,12 +19,12 @@ void avx2_threadPoolWithBatchingAndQueueWorker(AvxAlignedMatrix<T> &resultMatrix
                                                const AvxAlignedMatrix<T> &a,
                                                const AvxAlignedMatrix<T> &b,
                                                int numOfElements,
-                                               std::queue<std::pair<int, int>>& tasks,
-                                               std::mutex& mtx, std::condition_variable& cv,
-                                               bool& done,
-                                               std::function<void(const AvxAlignedMatrix<T>&,
-                                                                  const AvxAlignedMatrix<T>&,
-                                                                  AvxAlignedMatrix<T>&,
+                                               std::queue<std::pair<int, int> > &tasks,
+                                               std::mutex &mtx, std::condition_variable &cv,
+                                               bool &done,
+                                               std::function<void(const AvxAlignedMatrix<T> &,
+                                                                  const AvxAlignedMatrix<T> &,
+                                                                  AvxAlignedMatrix<T> &,
                                                                   int, int, int, int)> multiplyFunc) {
     const int simdSizeBytes = 32;
     const int numOfVariablesPerSimd = simdSizeBytes / sizeof(T);
@@ -32,8 +32,7 @@ void avx2_threadPoolWithBatchingAndQueueWorker(AvxAlignedMatrix<T> &resultMatrix
     numOfElementsThatFitSimd *= numOfVariablesPerSimd;
 
     while (true) {
-        std::pair<int, int> task;
-        {
+        std::pair<int, int> task; {
             std::unique_lock<std::mutex> lock(mtx);
             cv.wait(lock, [&]() { return done || !tasks.empty(); });
 
@@ -50,20 +49,21 @@ void avx2_threadPoolWithBatchingAndQueueWorker(AvxAlignedMatrix<T> &resultMatrix
 }
 
 
-template <typename T>
+template<typename T>
 AvxAlignedMatrix<T> AVX_threadPoolWithBatchingAndQueue(const AvxAlignedMatrix<T> &a,
-                                                       const AvxAlignedMatrix<T> &b) {
+                                                       const AvxAlignedMatrix<T> &b,
+                                                       bool withTransposition) {
     int rowsA = a.size();
     int rowsB = b.size();
     int columnsB = b[0].size();
     int numOfElements = rowsB;
 
     AvxAlignedMatrix<T> resultMatrix = createAvxAlignedMatrix<T>(rowsA, columnsB);
-    const AvxAlignedMatrix<T> &newB = transposeMatrix(b);
+    const AvxAlignedMatrix<T> &newB = withTransposition ? transposeMatrix(b) : b;
 
     const unsigned int maxNumberOfCPUCores = std::thread::hardware_concurrency();
 
-    std::queue<std::pair<int, int>> tasks;
+    std::queue<std::pair<int, int> > tasks;
     std::mutex mtx;
     std::condition_variable cv;
     bool done = false;
@@ -75,9 +75,9 @@ AvxAlignedMatrix<T> AVX_threadPoolWithBatchingAndQueue(const AvxAlignedMatrix<T>
     }
 
     // Define multiplyFunc based on type
-    std::function<void(const AvxAlignedMatrix<T>&,
-                       const AvxAlignedMatrix<T>&,
-                       AvxAlignedMatrix<T>&,
+    std::function<void(const AvxAlignedMatrix<T> &,
+                       const AvxAlignedMatrix<T> &,
+                       AvxAlignedMatrix<T> &,
                        int, int, int, int)> multiplyFunc;
 
     if constexpr (std::is_same_v<T, float>) {
@@ -95,19 +95,17 @@ AvxAlignedMatrix<T> AVX_threadPoolWithBatchingAndQueue(const AvxAlignedMatrix<T>
     for (unsigned int n = 0; n < maxNumberOfCPUCores; ++n) {
         threads.emplace_back([&]() {
             avx2_threadPoolWithBatchingAndQueueWorker<T>(
-                    resultMatrix, a, newB, numOfElements, tasks, mtx, cv, done, multiplyFunc);
+                resultMatrix, a, newB, numOfElements, tasks, mtx, cv, done, multiplyFunc);
         });
     }
 
-    cv.notify_all();
-
-    {
+    cv.notify_all(); {
         std::unique_lock<std::mutex> lock(mtx);
         done = true;
     }
     cv.notify_all();
 
-    for (auto& thread : threads) {
+    for (auto &thread: threads) {
         thread.join();
     }
 

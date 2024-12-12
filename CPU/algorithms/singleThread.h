@@ -21,7 +21,7 @@ AvxAlignedMatrix<T> singleThread(const AvxAlignedMatrix<T> &a,
         for (int j = 0; j < columnsB; ++j) {
             multiplySingleColumn<T>(resultMatrix, a, newB,
                                     i, j, numOfElements,
-                                    false
+                                    withTransposition
             );
         }
     }

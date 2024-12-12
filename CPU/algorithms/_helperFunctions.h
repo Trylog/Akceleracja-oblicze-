@@ -7,7 +7,7 @@
 template<typename T>
 void multiplySingleColumn(AvxAlignedMatrix<T> &result,
                           const AvxAlignedMatrix<T> &a, const AvxAlignedMatrix<T> &b,
-                          int aIndex, int bIndex, int numOfElements, bool wasTransposed = false) {
+                          int aIndex, int bIndex, int numOfElements, bool wasTransposed) {
     T sum = T{}; // T{} is uniform initialization. Return 0 for numeric types
 
     for (int i = 0; i < numOfElements; ++i) {

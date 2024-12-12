@@ -21,7 +21,7 @@ void threadPoolWithBatchingAndQueueWorker(AvxAlignedMatrix<T> &resultMatrix,
     while (true) {
         std::pair<int, int> task;
         {
-            std::unique_lock<std::mutex> lock(mtx);
+            std::unique_lock lock(mtx);
             cv.wait(lock, [&]() { return done || !tasks.empty(); });
 
             if (done && tasks.empty()) return;
@@ -67,7 +67,7 @@ AvxAlignedMatrix<T> threadPoolWithBatchingAndQueue(const AvxAlignedMatrix<T> &a,
     std::vector<std::thread> threads;
     for (unsigned int n = 0; n < maxNumberOfCPUCores; ++n) {
         threads.emplace_back(threadPoolWithBatchingAndQueueWorker<T>,
-                             std::ref(resultMatrix), std::cref(a), std::cref(b), numOfElements,
+                             std::ref(resultMatrix), std::cref(a), std::cref(newB), numOfElements,
                              std::ref(tasks), std::ref(mtx), std::ref(cv), std::ref(done)
         );
     }
@@ -75,7 +75,7 @@ AvxAlignedMatrix<T> threadPoolWithBatchingAndQueue(const AvxAlignedMatrix<T> &a,
     cv.notify_all();
 
     {
-        std::unique_lock<std::mutex> lock(mtx);
+        std::unique_lock lock(mtx);
         done = true;
     }
     cv.notify_all();

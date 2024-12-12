@@ -36,7 +36,7 @@ namespace MatrixMultiplication {
     }
 
 
-    template <typename T>
+    template<typename T>
     AvxAlignedMatrix<T> threadPoolWithBatchingAndQueue(const AvxAlignedMatrix<T> &a,
                                                        const AvxAlignedMatrix<T> &b,
                                                        bool withTransposition) {
@@ -45,23 +45,25 @@ namespace MatrixMultiplication {
 
 
     template<typename T>
-    AvxAlignedMatrix<T> threadPoolWithBathing(const AvxAlignedMatrix<T> &a,
+    AvxAlignedMatrix<T> threadPoolWithBatching(const AvxAlignedMatrix<T> &a,
                                               const AvxAlignedMatrix<T> &b,
                                               bool withTransposition) {
         return ::threadPoolWithBathing(a, b, withTransposition);
     }
 
 
-    template <typename T>
+    template<typename T>
     AvxAlignedMatrix<T> AVX_singleThread(const AvxAlignedMatrix<T> &a,
-                                         const AvxAlignedMatrix<T> &b) {
-        return ::AVX_singleThread(a, b);
+                                         const AvxAlignedMatrix<T> &b,
+                                         bool withTransposition) {
+        return ::AVX_singleThread(a, b, withTransposition);
     }
 
 
-    template <typename T>
+    template<typename T>
     AvxAlignedMatrix<T> AVX_threadPoolWithBatchingAndQueue(const AvxAlignedMatrix<T> &a,
-                                                           const AvxAlignedMatrix<T> &b) {
-        return ::AVX_threadPoolWithBatchingAndQueue(a, b);
+                                                           const AvxAlignedMatrix<T> &b,
+                                                           bool withTransposition) {
+        return ::AVX_threadPoolWithBatchingAndQueue(a, b, withTransposition);
     }
 }

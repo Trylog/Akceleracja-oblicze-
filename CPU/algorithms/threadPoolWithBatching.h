@@ -51,7 +51,7 @@ AvxAlignedMatrix<T> threadPoolWithBathing(const AvxAlignedMatrix<T>& a,
     int numOfElements = b.size();
 
     AvxAlignedMatrix<T> resultMatrix = createAvxAlignedMatrix<T>(rowsA, columnsB);
-    // Optionally transpose matrix b if needed
+
     const AvxAlignedMatrix<T> &newB = withTransposition ? transposeMatrix(b) : b;
 
     const unsigned int maxNumberOfCPUCores = std::thread::hardware_concurrency();

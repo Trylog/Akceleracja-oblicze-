@@ -12,11 +12,12 @@
 
 template <typename T>
 AvxAlignedMatrix<T> AVX_singleThread(const AvxAlignedMatrix<T> &a,
-                                     const AvxAlignedMatrix<T> &b) {
-    const AvxAlignedMatrix<T> &bT =  transposeMatrix(b);
+                                     const AvxAlignedMatrix<T> &b,
+                                     bool withTransposition) {
+    const AvxAlignedMatrix<T> &newB = withTransposition ? transposeMatrix(b) : b;
     int rowsA = a.size();
     int columnsA = a[0].size();
-    int rowsBT = bT.size();
+    int rowsBT = newB.size();
 
     AvxAlignedMatrix<T> resultMatrix = createAvxAlignedMatrix<T>(rowsA, rowsBT);
 
@@ -42,7 +43,7 @@ AvxAlignedMatrix<T> AVX_singleThread(const AvxAlignedMatrix<T> &a,
 
     for (int i = 0; i < rowsA; ++i) {
         for (int j = 0; j < rowsBT; ++j) {
-            multiplyFunc(a, bT, resultMatrix, i, j, columnsA, numOfElementsThatFitSimd);
+            multiplyFunc(a, newB, resultMatrix, i, j, columnsA, numOfElementsThatFitSimd);
         }
     }
 

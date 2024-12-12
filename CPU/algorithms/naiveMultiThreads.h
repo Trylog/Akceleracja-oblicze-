@@ -26,7 +26,7 @@ AvxAlignedMatrix<T> naiveMultiThreads(const AvxAlignedMatrix<T> &a,
                     std::thread(multiplySingleColumn<T>,
                                 std::ref(resultMatrix), std::cref(a), std::cref(newB),
                                 i, j, numOfElements,
-                                false
+                                withTransposition
                     )
             );
         }
