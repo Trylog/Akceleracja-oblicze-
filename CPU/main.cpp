@@ -7,6 +7,7 @@
 #include <variant>
 #include <random>
 #include <cstdint> // int8_t
+#include<fstream>
 
 #include "matrixMultiplication.h"
 #include "avxAlignedVector.h"
@@ -107,41 +108,41 @@ double execTimeThreadPoolWithBatchingAndQueueSimd(AvxAlignedMatrix<T> a, AvxAlig
     return measureExecutionTime(MatrixMultiplication::AVX_threadPoolWithBatchingAndQueue<T>, a, b, true);
 }
 
+
 template<typename T>
 void printRuntimes(int rowsA, int columnsA, int rowsB, int columnsB) {
     auto a = generateRandomMatrix<T>(rowsA, columnsA);
     auto b = generateRandomMatrix<T>(rowsB, columnsB);
 
-    std::cout << "Matrix A: " << std::endl;
-    // printMatrix(a);
-    std::cout << "Matrix B: " << std::endl;
-    // printMatrix(b);
-    std::cout << std::endl << std::endl;
+    std::ofstream resultFile("result_" + std::to_string(rowsA) + "_" + typeid(T).name() + ".csv", std::ios::app);
 
+    if(rowsA < 1000) {
+        resultFile << "Single thread;";
+        double exec_time_single = execTimeSingleThread<T>(a, b);
+        resultFile << exec_time_single << std::endl;
 
-    // std::cout << "Single thread: " << std::endl;
-    // double exec_time_single = execTimeSingleThread<T>(a, b);
-    // std::cout << exec_time_single << " microseconds" << std::endl << std::endl;
-    //
-    // std::cout << "Single thread SIMD: " << std::endl;
-    // double exec_time_single_simd = execTimeSingleThreadSimd<T>(a, b);
-    // std::cout << exec_time_single_simd << " microseconds" << std::endl << std::endl;
-    //
-    // std::cout<< "Naive multi threads: " << std::endl;
-    // double exec_time_naive_multi = execTimeNaiveMultiThreads<T>(a, b);
-    // std::cout << exec_time_naive_multi << " microseconds" << std::endl << std::endl;
-    //
-    // std::cout << "Thread pool with batching: " << std::endl;
-    // double exec_time_thread_pool_batching = execTimeThreadPoolWithBatching<T>(a, b);
-    // std::cout << exec_time_thread_pool_batching << " microseconds" << std::endl << std::endl;
+        resultFile << "Single thread SIMD;";
+        double exec_time_single_simd = execTimeSingleThreadSimd<T>(a, b);
+        resultFile << exec_time_single_simd << std::endl;
 
-    std::cout << "Thread pool with batching and queue: " << std::endl;
+        resultFile<< "Naive multi threads;";
+        double exec_time_naive_multi = execTimeNaiveMultiThreads<T>(a, b);
+        resultFile << exec_time_naive_multi << std::endl;
+    }
+
+    if(rowsA < 12500) {
+        resultFile << "Thread pool with batching;";
+        double exec_time_thread_pool_batching = execTimeThreadPoolWithBatching<T>(a, b);
+        resultFile << exec_time_thread_pool_batching << std::endl;
+    }
+
+    resultFile << "Thread pool with batching and queue;";
     double exec_time_thread_pool_batching_queue = execTimeThreadPoolWithBatchingAndQueue<T>(a, b);
-    std::cout << exec_time_thread_pool_batching_queue << " microseconds" << std::endl << std::endl;
+    resultFile << exec_time_thread_pool_batching_queue << std::endl;
 
-    std::cout << "Thread pool with batching and queue SIMD: " << std::endl;
+    resultFile << "Thread pool with batching and queue SIMD;";
     double exec_time_thread_pool_batching_queue_simd = execTimeThreadPoolWithBatchingAndQueueSimd<T>(a, b);
-    std::cout << exec_time_thread_pool_batching_queue_simd << " microseconds" << std::endl << std::endl;
+    resultFile << exec_time_thread_pool_batching_queue_simd << std::endl;
 
 }
 
@@ -193,18 +194,37 @@ char getDataType() {
 
 
 void runWithGeneratedMatrices() {
-    int rowsA = getDimensionOfMatrix("Type in rowsA size: ");
-    int columnsA = getDimensionOfMatrix("Type in columnsA size: ");
-    int rowsB = getDimensionOfMatrix("Type in rowsB size: ");
-    int columnsB = getDimensionOfMatrix("Type in columnsB size: ");
+    // int rowsA = getDimensionOfMatrix("Type in rowsA size: ");
+    // int columnsA = getDimensionOfMatrix("Type in columnsA size: ");
+    // int rowsB = getDimensionOfMatrix("Type in rowsB size: ");
+    // int columnsB = getDimensionOfMatrix("Type in columnsB size: ");
+    //
+    // if (columnsA != rowsB) {
+    //     std::cerr << "Matrix1 columns number not equal to Matrix2 rows number." << std::endl;
+    //     exit(3);
+    // }
 
-    if (columnsA != rowsB) {
-        std::cerr << "Matrix1 columns number not equal to Matrix2 rows number." << std::endl;
-        exit(3);
+    std::queue<int> volumes_queue;
+
+    std::vector<int> values = {10, 50, 100, 250, 1000, 2500, 5000, 10000, 12500, 15000, 17500, 20000, 25000};
+    for (int i = 0; i < values.size(); i++) {
+        volumes_queue.push(values[i]);
     }
 
-    char datatype = getDataType();
-    testOnRandomMatrix(datatype, rowsA, columnsA, rowsB, columnsB);
+    std::cout << "Starting tests..." << std::endl;
+
+    while (!volumes_queue.empty()) {
+        std::cout << "Volume: " << volumes_queue.front() << std::endl;
+        int volume = volumes_queue.front();
+        volumes_queue.pop();
+        int rowsA = volume;
+        int columnsA = volume;
+        int rowsB = volume;
+        int columnsB = volume;
+
+        char datatype = getDataType();
+        testOnRandomMatrix(datatype, rowsA, columnsA, rowsB, columnsB);
+    }
 }
 
 
