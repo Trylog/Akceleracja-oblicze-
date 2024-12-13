@@ -1,69 +1,69 @@
 #pragma once
-#include <iostream>
+
+#include <iostream> // basic I/O
+#include <iomanip> // for std::setprecision
+
 #include <vector>
+
 #include <thread>
+#include <mutex>
+#include <queue>
+#include <condition_variable>
 
-
-template <typename T>
-void multiplySingleColumn(std::vector<std::vector<T>>& result,
-                          const std::vector<std::vector<T>>& a, const std::vector<std::vector<T>>& b,
-                          int aRow, int bColumn, int numOfElements) {
-
-    T sum = T{}; // T{} is uniform initialization. Return 0 for numeric types
-
-    for (int k = 0; k < numOfElements; ++k) {
-        sum += a[aRow][k] * b[k][bColumn];
-    }
-
-    result[aRow][bColumn] = sum;
-}
+#include "avxAlignedVector.h"
+#include "algorithms/singleThread.h"
+#include "algorithms/simd_singleThread.h"
+#include "algorithms/naiveMultiThreads.h"
+#include "algorithms/threadPoolWithBatching.h"
+#include "algorithms/threadPoolWithBatchingAndQueue.h"
+#include "algorithms/simd_threadPoolWithBatchingAndQueue.h"
 
 
 namespace MatrixMultiplication {
-    template <typename T>
-    std::vector<std::vector<T>> singleThread(const std::vector<std::vector<T>>& a, const std::vector<std::vector<T>>& b) {
-        int rowsA = a.size();
-        int columnsA = a[0].size();
-        int rowsB = b.size();
-        int columnsB = b[0].size();
-
-        std::vector<std::vector<T>> resultMatrix(rowsA, std::vector<T>(columnsB, 0));
-
-        for (int i = 0; i < rowsA; ++i) {
-            for (int j = 0; j < columnsB; ++j) {
-                multiplySingleColumn<T>(resultMatrix, a, b, i, j, rowsB);
-            }
-        }
-
-        return resultMatrix;
+    template<typename T>
+    AvxAlignedMatrix<T> singleThread(const AvxAlignedMatrix<T> &a,
+                                     const AvxAlignedMatrix<T> &b,
+                                     bool withTransposition) {
+        return ::singleThread(a, b, withTransposition);
     }
 
 
-    template <typename T>
-    std::vector<std::vector<T>> naiveMultiThreads(const std::vector<std::vector<T>>& a, const std::vector<std::vector<T>>& b) {
-        int rowsA = a.size();
-        int columnsA = a[0].size();
-        int rowsB = b.size();
-        int columnsB = b[0].size();
+    template<typename T>
+    AvxAlignedMatrix<T> naiveMultiThreads(const AvxAlignedMatrix<T> &a,
+                                          const AvxAlignedMatrix<T> &b,
+                                          bool withTransposition) {
+        return ::naiveMultiThreads(a, b, withTransposition);
+    }
 
-        std::vector<std::vector<T>> resultMatrix(rowsA, std::vector<T>(columnsB, 0));
 
-        std::vector<std::thread> threads;
+    template<typename T>
+    AvxAlignedMatrix<T> threadPoolWithBatchingAndQueue(const AvxAlignedMatrix<T> &a,
+                                                       const AvxAlignedMatrix<T> &b,
+                                                       bool withTransposition) {
+        return ::threadPoolWithBatchingAndQueue(a, b, withTransposition);
+    }
 
-        for (int i = 0; i < rowsA; ++i) {
-            for (int j = 0; j < columnsB; ++j) {
-                threads.push_back(
-                        std::thread(multiplySingleColumn<T>, std::ref(resultMatrix),
-                                    std::cref(a), std::cref(b),
-                                    i, j, rowsB)
-                );
-            }
-        }
 
-        for (auto& t : threads) {
-            t.join();
-        }
+    template<typename T>
+    AvxAlignedMatrix<T> threadPoolWithBatching(const AvxAlignedMatrix<T> &a,
+                                              const AvxAlignedMatrix<T> &b,
+                                              bool withTransposition) {
+        return ::threadPoolWithBathing(a, b, withTransposition);
+    }
 
-        return resultMatrix;
+
+    template<typename T>
+    AvxAlignedMatrix<T> AVX_singleThread(const AvxAlignedMatrix<T> &a,
+                                         const AvxAlignedMatrix<T> &b,
+                                         bool withTransposition) {
+        return ::AVX_singleThread(a, b, withTransposition);
+    }
+
+
+    template<typename T>
+    AvxAlignedMatrix<T> AVX_threadPoolWithBatchingAndQueue(const AvxAlignedMatrix<T> &a,
+                                                           const AvxAlignedMatrix<T> &b,
+                                                           bool withTransposition) {
+        return ::AVX_threadPoolWithBatchingAndQueue(a, b, withTransposition);
     }
 }
