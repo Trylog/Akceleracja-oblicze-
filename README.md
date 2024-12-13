@@ -11,7 +11,7 @@ Implemented versions of algorithm:
 - Thread pool with batching and queue SIMD
 
 # GPU
-It was developed using CUDA and cuBLAS library
+Algorithms were developed using CUDA and cuBLAS library
 ## CUDA
 - basic version
 - version with different division of tasks into thread blocks
